@@ -5,7 +5,7 @@ import { User, UserRole } from '../types';
 interface AdminProps {
     user: User;
 }
-
+ 
 export const Admin: React.FC<AdminProps> = ({ user }) => {
     if (user.role !== UserRole.ADMIN) return <div>Access Denied</div>;
 
