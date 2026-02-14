@@ -271,6 +271,33 @@ class MockDB {
   // --- Admin ---
   getAllUsers() { return this.users; }
   getAllTasks() { return this.tasks; }
+
+  addUser(username: string): User {
+      if (this.users.some(u => u.username === username)) {
+          throw new Error("Username already taken");
+      }
+      
+      // Basic code generation: U-000X
+      // Filter only creators to count for U-XXXX codes
+      const creators = this.users.filter(u => u.role === UserRole.CREATOR);
+      const nextNum = creators.length + 1;
+      const userCode = `U-${String(nextNum).padStart(4, '0')}`;
+      
+      const newUser: User = {
+          id: `u_${Date.now()}`,
+          userCode: userCode,
+          username: username,
+          role: UserRole.CREATOR,
+          credits: 5, // Default starting credits
+          lastActivity: new Date().toISOString(),
+          isActive: true,
+          tier: UserTier.BRONZE
+      };
+      
+      this.users.push(newUser);
+      this.persist();
+      return newUser;
+  }
 }
 
 export const db = new MockDB();

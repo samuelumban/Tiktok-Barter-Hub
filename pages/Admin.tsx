@@ -1,17 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { db } from '../services/mockDb';
 import { User, UserRole } from '../types';
+import { UserPlus } from 'lucide-react';
 
 interface AdminProps {
     user: User;
 }
- 
+
 export const Admin: React.FC<AdminProps> = ({ user }) => {
+    // Initialize state with all users to allow refreshing the list
+    const [allUsers, setAllUsers] = useState(db.getAllUsers());
+    const [newUsername, setNewUsername] = useState('');
+
     if (user.role !== UserRole.ADMIN) return <div>Access Denied</div>;
 
-    const allUsers = db.getAllUsers();
     const allTasks = db.getAllTasks();
     const allSongs = db.getAllSongs();
+
+    const handleAddUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newUsername.trim()) return;
+
+        try {
+            db.addUser(newUsername.trim());
+            // Update the local state with the fresh list from DB
+            setAllUsers([...db.getAllUsers()]);
+            setNewUsername('');
+        } catch (err: any) {
+            alert(err.message || "Failed to add user");
+        }
+    };
 
     return (
         <div className="space-y-8">
@@ -31,6 +49,33 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                     <div className="text-gray-500 text-sm">Tasks Completed</div>
                     <div className="text-2xl font-bold">{allTasks.filter(t => t.status === 'approved').length}</div>
                 </div>
+            </div>
+
+            {/* Add User Section */}
+            <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+                <h3 className="font-bold text-gray-700 mb-4 flex items-center">
+                    <UserPlus className="h-5 w-5 mr-2 text-indigo-600" />
+                    Add New User
+                </h3>
+                <form onSubmit={handleAddUser} className="flex gap-4 items-end">
+                    <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">New Username</label>
+                        <input 
+                            type="text" 
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            placeholder="e.g. creative_user_99"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                            required
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors h-10"
+                    >
+                        Add User
+                    </button>
+                </form>
             </div>
 
             {/* User List */}
