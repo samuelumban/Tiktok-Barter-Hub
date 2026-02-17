@@ -65,7 +65,7 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                             value={newUsername}
                             onChange={(e) => setNewUsername(e.target.value)}
                             placeholder="e.g. creative_user_99"
-                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-black"
                             required
                         />
                     </div>
@@ -81,11 +81,11 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
             {/* User List */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="font-bold text-gray-700">User Monitor</h3>
+                    <h3 className="font-bold text-black">User Monitor</h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-500 uppercase">
+                        <thead className="bg-gray-50 text-black uppercase">
                             <tr>
                                 <th className="px-6 py-3">Code</th>
                                 <th className="px-6 py-3">Username</th>
@@ -94,18 +94,18 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                                 <th className="px-6 py-3">Last Active</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200 text-black">
                             {allUsers.map(u => (
                                 <tr key={u.id}>
-                                    <td className="px-6 py-4 font-mono">{u.userCode}</td>
-                                    <td className="px-6 py-4">{u.username}</td>
-                                    <td className="px-6 py-4">{u.credits}</td>
+                                    <td className="px-6 py-4 font-mono text-black">{u.userCode}</td>
+                                    <td className="px-6 py-4 text-black">{u.username}</td>
+                                    <td className="px-6 py-4 text-black">{u.credits}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                             {u.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-500">{new Date(u.lastActivity).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 text-black">{new Date(u.lastActivity).toLocaleDateString()}</td>
                                 </tr>
                             ))}
                         </tbody>

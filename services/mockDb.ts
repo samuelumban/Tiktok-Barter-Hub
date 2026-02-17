@@ -3,29 +3,9 @@ import { User, Song, Task, UserRole, UserTier, SongStatus, TaskStatus } from '..
 // Initial Seed Data
 const MOCK_USERS: User[] = [
   {
-    id: 'u1',
-    userCode: 'U-0001',
-    username: 'creator_jane',
-    role: UserRole.CREATOR,
-    credits: 12,
-    lastActivity: new Date().toISOString(),
-    isActive: true,
-    tier: UserTier.SILVER
-  },
-  {
-    id: 'u2',
-    userCode: 'U-0002',
-    username: 'musician_bob',
-    role: UserRole.CREATOR,
-    credits: 2,
-    lastActivity: new Date().toISOString(),
-    isActive: true,
-    tier: UserTier.BRONZE
-  },
-  {
     id: 'admin',
     userCode: 'A-0000',
-    username: 'admin',
+    username: 'mimin.samuel',
     role: UserRole.ADMIN,
     credits: 999,
     lastActivity: new Date().toISOString(),
@@ -34,32 +14,7 @@ const MOCK_USERS: User[] = [
   }
 ];
 
-const MOCK_SONGS: Song[] = [
-  {
-    id: 's1',
-    rowCode: 'U-0001-S-0001',
-    ownerId: 'u1',
-    title: 'Summer Vibes',
-    artist: 'Jane Doe',
-    tiktokAudioUrl: 'https://tiktok.com/music/12345',
-    status: SongStatus.ACTIVE,
-    submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
-    unlockDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    usageCount: 5
-  },
-  {
-    id: 's2',
-    rowCode: 'U-0002-S-0001',
-    ownerId: 'u2',
-    title: 'Sad Piano',
-    artist: 'Bob Smith',
-    tiktokAudioUrl: 'https://tiktok.com/music/67890',
-    status: SongStatus.LOCKED,
-    submittedAt: new Date().toISOString(),
-    unlockDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-    usageCount: 0
-  }
-];
+const MOCK_SONGS: Song[] = [];
 
 const MOCK_TASKS: Task[] = [];
 
@@ -159,7 +114,7 @@ class MockDB {
       title,
       artist,
       tiktokAudioUrl: url,
-      status: SongStatus.LOCKED,
+      status: SongStatus.ACTIVE, // Changed from LOCKED to ACTIVE so it can be used immediately
       submittedAt: now.toISOString(),
       unlockDate: unlockDate.toISOString(),
       usageCount: 0

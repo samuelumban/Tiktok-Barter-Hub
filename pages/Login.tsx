@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../services/mockDb';
 import { User } from '../types';
 
@@ -9,14 +10,16 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const user = db.login(username);
     if (user) {
         onLogin(user);
+        navigate('/');
     } else {
-        setError('User not found. Try "creator_jane", "musician_bob", or "admin".');
+        setError('User not found. Please contact admin if you need access.');
     }
   };
 
@@ -49,15 +52,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         Access Dashboard
                     </button>
                 </form>
-
-                <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-                    <p className="text-xs text-gray-400">Demo Credentials:</p>
-                    <div className="flex justify-center space-x-2 mt-2">
-                        <button onClick={() => setUsername('creator_jane')} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">creator_jane</button>
-                        <button onClick={() => setUsername('musician_bob')} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">musician_bob</button>
-                         <button onClick={() => setUsername('admin')} className="text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200">admin</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
