@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, Song, SongStatus } from '../types';
+import { User, Song, SongStatus, SongGenre } from '../types';
 import { db } from '../services/mockDb';
-import { Lock, Unlock, Plus, Clock, Music2, Info } from 'lucide-react';
+import { Lock, Unlock, Plus, Clock, Music2, Info, FileVideo } from 'lucide-react';
 
 interface MySongsProps {
   user: User;
 }
+
+const GENRES: SongGenre[] = ['Pop', 'Religi', 'Dangdut', 'Remix', 'Rohani', 'Jazz', 'Etnik', 'Humor', 'Kids'];
 
 export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -15,6 +17,8 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
+  const [genre, setGenre] = useState<SongGenre>('Pop');
+  const [capcutUrl, setCapcutUrl] = useState('');
 
   useEffect(() => {
     setSongs(db.getSongsByUser(user.id));
@@ -26,12 +30,19 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
         alert("Anda telah mencapai batas maksimum 5 sound.");
         return;
     }
-    db.addSong(user.id, title, artist, url);
-    setSongs(db.getSongsByUser(user.id));
-    setIsModalOpen(false);
-    setTitle('');
-    setArtist('');
-    setUrl('');
+    try {
+        db.addSong(user.id, title, artist, url, genre, capcutUrl || undefined);
+        setSongs(db.getSongsByUser(user.id));
+        setIsModalOpen(false);
+        // Reset Form
+        setTitle('');
+        setArtist('');
+        setUrl('');
+        setGenre('Pop');
+        setCapcutUrl('');
+    } catch (err: any) {
+        alert(err.message);
+    }
   };
 
   const calculateDaysLeft = (unlockDate: string) => {
@@ -61,22 +72,32 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
              const isLocked = song.status === SongStatus.LOCKED;
              
              return (
-                <div key={song.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between h-48">
+                <div key={song.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between h-56">
                     <div>
                         <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-bold text-lg text-gray-900 truncate">{song.title}</h3>
+                            <h3 className="font-bold text-lg text-gray-900 truncate pr-2">{song.title}</h3>
                             {isLocked ? (
-                                <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full flex items-center">
+                                <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full flex items-center shrink-0">
                                     <Lock className="h-3 w-3 mr-1" /> Terkunci
                                 </span>
                             ) : (
-                                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center">
+                                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center shrink-0">
                                     <Unlock className="h-3 w-3 mr-1" /> Aktif
                                 </span>
                             )}
                         </div>
-                        <p className="text-gray-500 text-sm mb-4">{song.artist}</p>
-                        <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
+                        <p className="text-gray-500 text-sm">{song.artist}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                             <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">
+                                {song.genre}
+                            </span>
+                            {song.capcutTemplateUrl && (
+                                <span className="text-xs bg-black text-white px-2 py-0.5 rounded-full flex items-center">
+                                    <FileVideo className="h-3 w-3 mr-1" /> CapCut
+                                </span>
+                            )}
+                        </div>
+                        <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded mt-3">
                             ID: <span className="font-mono">{song.rowCode}</span>
                         </div>
                     </div>
@@ -110,8 +131,8 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl max-w-md w-full p-6">
-                <h2 className="text-xl font-bold mb-4">Kirim Sound Baru</h2>
+            <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Tambah Sound Baru</h2>
                 <form onSubmit={handleAddSong}>
                     <div className="space-y-4">
                         <div>
@@ -133,15 +154,38 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+                            <select 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                value={genre}
+                                onChange={(e) => setGenre(e.target.value as SongGenre)}
+                            >
+                                {GENRES.map(g => (
+                                    <option key={g} value={g}>{g}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">URL Audio TikTok</label>
                             <input 
                                 type="url"
                                 required
-                                placeholder="https://tiktok.com/..."
+                                placeholder="https://tiktok.com/music/..."
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                                 value={url}
                                 onChange={e => setUrl(e.target.value)}
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Template CapCut (Opsional)</label>
+                            <input 
+                                type="url"
+                                placeholder="https://www.capcut.com/template/..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                value={capcutUrl}
+                                onChange={e => setCapcutUrl(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Masukkan link template CapCut jika Anda sudah memilikinya.</p>
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end space-x-3">
@@ -156,7 +200,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             type="submit"
                             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                         >
-                            Kirim Sound
+                            Tambah
                         </button>
                     </div>
                 </form>

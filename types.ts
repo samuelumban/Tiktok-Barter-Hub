@@ -10,26 +10,47 @@ export enum UserRole {
   ADMIN = 'admin'
 }
 
+export type ContentCategory = 
+  'Quotes Motivasi' | 'Quotes Religi' | 'Quotes Rohani' | 'Lipsing' | 
+  'Dance' | 'Drama' | 'Vlog' | 'Cooking' | 'Lyrics' | 'Personal' | 'Gosip' | 'Berita';
+
 export interface User {
   id: string;
   userCode: string; // U-0001
   username: string;
-  password?: string; // New field
-  name?: string;     // New field
-  phoneNumber?: string; // New field
-  email?: string;    // New field
+  password?: string;
+  name?: string;
+  phoneNumber?: string;
+  email?: string;
   role: UserRole;
   credits: number;
   lastActivity: string; // ISO Date (Login/Navigation)
   lastTaskSubmission?: string; // ISO Date (Content Creation Activity)
   isActive: boolean;
   tier: UserTier;
+  
+  // New Profile Fields
+  tiktokUsername?: string;
+  tiktokLink?: string;
+  contentCategory?: ContentCategory;
+
+  // Penalty Tracking
+  penaltyPointsWeek: number; // Max 10 per week
+  lastPenaltyDate?: string;
 }
 
 export enum SongStatus {
   LOCKED = 'locked',
   ACTIVE = 'active',
   INACTIVE = 'inactive' // due to user inactivity
+}
+
+export type SongGenre = 'Pop' | 'Religi' | 'Dangdut' | 'Remix' | 'Rohani' | 'Jazz' | 'Etnik' | 'Humor' | 'Kids';
+
+export enum CapcutStatus {
+  NONE = 'none',
+  REQUESTED = 'requested',
+  COMPLETED = 'completed'
 }
 
 export interface Song {
@@ -43,6 +64,11 @@ export interface Song {
   submittedAt: string; // ISO Date
   unlockDate: string; // ISO Date (H+8)
   usageCount: number;
+  
+  // New Fields
+  genre?: SongGenre;
+  capcutTemplateUrl?: string; // Optional field for CapCut
+  capcutStatus: CapcutStatus;
 }
 
 export enum TaskStatus {
@@ -63,6 +89,7 @@ export interface Task {
   submittedAt?: string;
   completedAt?: string;
   feedback?: string;
+  rating?: number; // 1-5 Stars
 }
 
 export interface DashboardStats {

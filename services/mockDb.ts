@@ -1,4 +1,4 @@
-import { User, Song, Task, UserRole, UserTier, SongStatus, TaskStatus } from '../types';
+import { User, Song, Task, UserRole, UserTier, SongStatus, TaskStatus, SongGenre, CapcutStatus, ContentCategory } from '../types';
 
 // Initial Seed Data
 const MOCK_USERS: User[] = [
@@ -15,7 +15,8 @@ const MOCK_USERS: User[] = [
     lastActivity: new Date().toISOString(),
     lastTaskSubmission: new Date().toISOString(),
     isActive: true,
-    tier: UserTier.TOP_TIER
+    tier: UserTier.TOP_TIER,
+    penaltyPointsWeek: 0
   }
 ];
 
@@ -62,35 +63,67 @@ class MockDB {
     const user = this.users.find(u => u.username === username);
     if (!user) return null;
 
-    // Simple password check
     if (user.password && user.password !== password) {
         return null; 
     }
 
-    // Inactivity Check
+    const now = new Date();
+    
+    // PENALTY LOGIC
+    // Reset penalty week counter if it's a new week (simplification: based on lastPenaltyDate > 7 days)
+    if (user.lastPenaltyDate) {
+        const lastPenalty = new Date(user.lastPenaltyDate).getTime();
+        if ((now.getTime() - lastPenalty) > 7 * 24 * 60 * 60 * 1000) {
+            user.penaltyPointsWeek = 0;
+        }
+    }
+
+    // Check inactivity for penalty
+    if (user.lastTaskSubmission && user.role !== UserRole.ADMIN) {
+        const lastSub = new Date(user.lastTaskSubmission).getTime();
+        const diffHours = (now.getTime() - lastSub) / (1000 * 60 * 60);
+        
+        // If inactive > 24 hours AND haven't reached max penalty (10)
+        if (diffHours > 24 && user.penaltyPointsWeek < 10) {
+            // Apply 5 point penalty
+            const pointsToDeduct = 5;
+            // Ensure we don't deduct more than allowed weekly limit remaining
+            const allowedDeduction = Math.min(pointsToDeduct, 10 - user.penaltyPointsWeek);
+            
+            if (allowedDeduction > 0) {
+                user.credits = Math.max(0, user.credits - allowedDeduction);
+                user.penaltyPointsWeek += allowedDeduction;
+                user.lastPenaltyDate = now.toISOString();
+                // We update lastTaskSubmission to NOW to prevent immediate double penalty, 
+                // treating the penalty as a "checkpoint"
+                // user.lastTaskSubmission = now.toISOString(); 
+                // Alternatively, we just rely on penaltyPointsWeek check to stop further deductions
+            }
+        }
+    }
+
+
+    // Inactivity Check (Status)
     const lastActive = new Date(user.lastActivity).getTime();
-    const now = new Date().getTime();
-    const hoursSinceActive = (now - lastActive) / (1000 * 60 * 60);
+    const hoursSinceActive = (now.getTime() - lastActive) / (1000 * 60 * 60);
 
     if (hoursSinceActive > 48) {
-      // Freeze songs
       this.songs.forEach(s => {
         if (s.ownerId === user.id) s.status = SongStatus.INACTIVE;
       });
-      user.isActive = false; // Soft inactive state
+      user.isActive = false; 
     } else {
       user.isActive = true;
-      // Reactivate songs if they were inactive but unlocked
       this.songs.forEach(s => {
          if (s.ownerId === user.id && s.status === SongStatus.INACTIVE) {
             const unlockTime = new Date(s.unlockDate).getTime();
-            if (now > unlockTime) s.status = SongStatus.ACTIVE;
+            if (now.getTime() > unlockTime) s.status = SongStatus.ACTIVE;
             else s.status = SongStatus.LOCKED;
          }
       });
     }
 
-    user.lastActivity = new Date().toISOString();
+    user.lastActivity = now.toISOString();
     this.persist();
     return user;
   }
@@ -115,9 +148,10 @@ class MockDB {
         role: UserRole.CREATOR,
         credits: 5,
         lastActivity: new Date().toISOString(),
-        lastTaskSubmission: new Date().toISOString(), // Initialize as active
+        lastTaskSubmission: new Date().toISOString(), 
         isActive: true,
-        tier: UserTier.BRONZE
+        tier: UserTier.BRONZE,
+        penaltyPointsWeek: 0
     };
 
     this.users.push(newUser);
@@ -125,13 +159,23 @@ class MockDB {
     return newUser;
   }
 
+  updateUserProfile(userId: string, data: { tiktokUsername: string; tiktokLink: string; category: ContentCategory }): User {
+      const user = this.getUser(userId);
+      if (!user) throw new Error("User not found");
+      
+      user.tiktokUsername = data.tiktokUsername;
+      user.tiktokLink = data.tiktokLink;
+      user.contentCategory = data.category;
+      
+      this.persist();
+      return user;
+  }
+
   resetPassword(username: string, phoneNumber: string, newPassword: string): boolean {
     const user = this.users.find(u => u.username === username);
     if (!user) {
         throw new Error("Username tidak ditemukan.");
     }
-    
-    // Normalize phone numbers for comparison (remove spaces, dashes)
     const cleanInputPhone = phoneNumber.replace(/\D/g, '');
     const cleanUserPhone = (user.phoneNumber || '').replace(/\D/g, '');
 
@@ -152,7 +196,6 @@ class MockDB {
     const user = this.users.find(u => u.id === id);
     if (!user) throw new Error("User tidak ditemukan");
 
-    // Prevent duplicate username if username is being changed
     if (updates.username && updates.username !== user.username) {
         if (this.users.some(u => u.username === updates.username)) {
             throw new Error("Username sudah digunakan user lain.");
@@ -173,14 +216,14 @@ class MockDB {
     return this.songs;
   }
 
-  addSong(userId: string, title: string, artist: string, url: string): Song {
+  addSong(userId: string, title: string, artist: string, url: string, genre: SongGenre, capcutUrl?: string): Song {
     const user = this.getUser(userId);
     if (!user) throw new Error("User tidak ditemukan");
 
     const userSongs = this.getSongsByUser(userId);
     const index = userSongs.length + 1;
     const now = new Date();
-    const unlockDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // +7 days
+    const unlockDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); 
 
     const newSong: Song = {
       id: `s_${Date.now()}`,
@@ -189,10 +232,13 @@ class MockDB {
       title,
       artist,
       tiktokAudioUrl: url,
-      status: SongStatus.ACTIVE, // Changed from LOCKED to ACTIVE so it can be used immediately
+      status: SongStatus.ACTIVE,
       submittedAt: now.toISOString(),
       unlockDate: unlockDate.toISOString(),
-      usageCount: 0
+      usageCount: 0,
+      genre: genre,
+      capcutTemplateUrl: capcutUrl,
+      capcutStatus: capcutUrl ? CapcutStatus.COMPLETED : CapcutStatus.NONE
     };
 
     this.songs.push(newSong);
@@ -205,19 +251,42 @@ class MockDB {
     this.persist();
   }
 
-  // --- Tasks (The Assignment Engine) ---
+  // --- CapCut Features ---
+  requestCapcutTemplate(userId: string, songId: string) {
+      const user = this.getUser(userId);
+      const song = this.songs.find(s => s.id === songId);
+      if (!user || !song) throw new Error("Data invalid");
+
+      if (user.credits < 500) throw new Error("Kredit tidak mencukupi (Min 500)");
+      
+      song.capcutStatus = CapcutStatus.REQUESTED;
+      this.persist();
+  }
+
+  fulfillCapcutRequest(songId: string, templateLink: string) {
+      const song = this.songs.find(s => s.id === songId);
+      if (!song) throw new Error("Song not found");
+      
+      song.capcutTemplateUrl = templateLink;
+      song.capcutStatus = CapcutStatus.COMPLETED;
+      this.persist();
+  }
+
+  // --- Tasks ---
   getTasksByAssignee(userId: string): Task[] {
     return this.tasks.filter(t => t.assigneeId === userId);
   }
 
   getPendingApprovals(ownerId: string): Task[] {
-    // Tasks where the song belongs to ownerId AND status is SUBMITTED
     const ownerSongIds = this.songs.filter(s => s.ownerId === ownerId).map(s => s.id);
     return this.tasks.filter(t => ownerSongIds.includes(t.songId) && t.status === TaskStatus.SUBMITTED);
   }
 
+  getApprovedTasks(): Task[] {
+      return this.tasks.filter(t => t.status === TaskStatus.APPROVED);
+  }
+
   assignRandomTask(userId: string): Task | null {
-    // Check daily limit (5 tasks per day)
     const today = new Date().toDateString();
     const userTasks = this.getTasksByAssignee(userId);
     const tasksToday = userTasks.filter(t => new Date(t.createdAt).toDateString() === today);
@@ -226,22 +295,17 @@ class MockDB {
         throw new Error("Batas harian tercapai (Maks 5 sound/hari).");
     }
 
-    // 1. Get eligible songs (Active, not owned by user)
     let eligibleSongs = this.songs.filter(
       s => s.ownerId !== userId && s.status === SongStatus.ACTIVE
     );
 
-    // Filter out songs that have already been assigned to this user TODAY
     const songsAssignedToday = tasksToday.map(t => t.songId);
-
     eligibleSongs = eligibleSongs.filter(s => !songsAssignedToday.includes(s.id));
 
     if (eligibleSongs.length === 0) return null;
 
-    // 2. Pick random
     const randomSong = eligibleSongs[Math.floor(Math.random() * eligibleSongs.length)];
 
-    // 3. Create task
     const newTask: Task = {
       id: `t_${Date.now()}`,
       taskCode: `T-${Math.floor(Math.random() * 10000)}`,
@@ -263,7 +327,6 @@ class MockDB {
       task.contentLink = link;
       task.submittedAt = new Date().toISOString();
       
-      // Update User Activity (Traffic Light System)
       const user = this.getUser(task.assigneeId);
       if (user) {
           user.lastTaskSubmission = new Date().toISOString();
@@ -273,26 +336,26 @@ class MockDB {
     }
   }
 
-  reviewTask(taskId: string, approved: boolean, feedback?: string): void {
+  reviewTask(taskId: string, approved: boolean, feedback?: string, rating?: number): void {
     const task = this.tasks.find(t => t.id === taskId);
     if (!task) return;
 
     if (approved) {
       task.status = TaskStatus.APPROVED;
       task.completedAt = new Date().toISOString();
+      task.rating = rating || 5;
       
-      // Credit Logic
+      // Credit Logic: +10 Points per success content
       const assignee = this.users.find(u => u.id === task.assigneeId);
       if (assignee) {
-        assignee.credits += 1;
+        assignee.credits += 10;
         
         // Tier Update
-        if (assignee.credits >= 50) assignee.tier = UserTier.TOP_TIER;
-        else if (assignee.credits >= 25) assignee.tier = UserTier.GOLD;
-        else if (assignee.credits >= 10) assignee.tier = UserTier.SILVER;
+        if (assignee.credits >= 1000) assignee.tier = UserTier.TOP_TIER;
+        else if (assignee.credits >= 500) assignee.tier = UserTier.GOLD;
+        else if (assignee.credits >= 200) assignee.tier = UserTier.SILVER;
       }
 
-      // Increment song usage
       const song = this.songs.find(s => s.id === task.songId);
       if (song) song.usageCount += 1;
 
@@ -329,7 +392,6 @@ class MockDB {
   getAllTasks() { return this.tasks; }
 
   addUser(username: string): User {
-      // Kept for backward compatibility with existing Admin.tsx simple add
       if (this.users.some(u => u.username === username)) {
           throw new Error("Username sudah digunakan");
       }
@@ -342,13 +404,14 @@ class MockDB {
           id: `u_${Date.now()}`,
           userCode: userCode,
           username: username,
-          password: 'password123', // Default password for admin created users
+          password: 'password123',
           role: UserRole.CREATOR,
           credits: 5,
           lastActivity: new Date().toISOString(),
           lastTaskSubmission: new Date().toISOString(),
           isActive: true,
-          tier: UserTier.BRONZE
+          tier: UserTier.BRONZE,
+          penaltyPointsWeek: 0
       };
       
       this.users.push(newUser);

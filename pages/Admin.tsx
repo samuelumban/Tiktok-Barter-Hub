@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../services/mockDb';
-import { User, UserRole } from '../types';
-import { UserPlus, Trash2, Music, ExternalLink, Mail, Phone, MessageCircle, AlertCircle, Pencil, X, Save } from 'lucide-react';
+import { User, UserRole, Song, CapcutStatus } from '../types';
+import { UserPlus, Trash2, Music, ExternalLink, Mail, Phone, MessageCircle, AlertCircle, Pencil, X, Save, FileVideo, Sparkles } from 'lucide-react';
 
 interface AdminProps {
     user: User;
@@ -17,9 +17,16 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [editForm, setEditForm] = useState<Partial<User>>({});
 
+    // CapCut Fulfillment
+    const [templateLinks, setTemplateLinks] = useState<{[key: string]: string}>({});
+
     if (user.role !== UserRole.ADMIN) return <div>Akses Ditolak</div>;
 
     const allTasks = db.getAllTasks();
+
+    // Stats Logic
+    const zeroUsageSongs = allSongs.filter(s => s.usageCount === 0).length;
+    const pendingCapcutRequests = allSongs.filter(s => s.capcutStatus === CapcutStatus.REQUESTED);
 
     const handleAddUser = (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,6 +46,21 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         if (window.confirm("Yakin ingin menghapus sound ini?")) {
             db.deleteSong(songId);
             setAllSongs([...db.getAllSongs()]);
+        }
+    };
+
+    const handleFulfillCapcut = (songId: string) => {
+        const link = templateLinks[songId];
+        if (!link) return;
+        try {
+            db.fulfillCapcutRequest(songId, link);
+            setAllSongs([...db.getAllSongs()]);
+            // clear input
+            const newLinks = {...templateLinks};
+            delete newLinks[songId];
+            setTemplateLinks(newLinks);
+        } catch (err: any) {
+            alert(err.message);
         }
     };
 
@@ -69,15 +91,11 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
 
     const generateWaLink = (u: User) => {
         if (!u.phoneNumber) return '#';
-        
-        // Ensure format 62...
         let phone = u.phoneNumber.replace(/[^0-9]/g, '');
         if (phone.startsWith('0')) {
             phone = '62' + phone.substring(1);
         }
-
         const message = `Hi, ${u.username} Anda tidak melakukan submit tugas membuat konten selama 48 jam, segera kerjakan tugas anda. Jika tugas tidak dikerjakan maka sound Anda akan dihapus`;
-        
         return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     };
 
@@ -99,12 +117,19 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         }
     };
 
+    // Group Songs By User
+    const songsByUser: { [key: string]: Song[] } = {};
+    allSongs.forEach(s => {
+        if (!songsByUser[s.ownerId]) songsByUser[s.ownerId] = [];
+        songsByUser[s.ownerId].push(s);
+    });
+
     return (
         <div className="space-y-8">
             <h1 className="text-2xl font-bold text-gray-900">Panel Kontrol Admin</h1>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white p-4 rounded shadow border-l-4 border-indigo-500">
                     <div className="text-gray-500 text-sm">Total User</div>
                     <div className="text-2xl font-bold">{allUsers.length}</div>
@@ -113,11 +138,51 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                     <div className="text-gray-500 text-sm">Total Sound</div>
                     <div className="text-2xl font-bold">{allSongs.length}</div>
                 </div>
-                <div className="bg-white p-4 rounded shadow border-l-4 border-purple-500">
-                    <div className="text-gray-500 text-sm">Tugas Selesai</div>
-                    <div className="text-2xl font-bold">{allTasks.filter(t => t.status === 'approved').length}</div>
+                <div className="bg-white p-4 rounded shadow border-l-4 border-red-500">
+                    <div className="text-gray-500 text-sm">Sound 0 Usage</div>
+                    <div className="text-2xl font-bold">{zeroUsageSongs}</div>
+                </div>
+                <div className="bg-white p-4 rounded shadow border-l-4 border-yellow-500">
+                    <div className="text-gray-500 text-sm">Req CapCut</div>
+                    <div className="text-2xl font-bold">{pendingCapcutRequests.length}</div>
                 </div>
             </div>
+
+            {/* CapCut Request Management */}
+            {pendingCapcutRequests.length > 0 && (
+                <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg shadow p-6 text-white">
+                    <h3 className="font-bold text-yellow-400 mb-4 flex items-center">
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Permintaan Template CapCut
+                    </h3>
+                    <div className="space-y-4">
+                        {pendingCapcutRequests.map(s => (
+                            <div key={s.id} className="bg-white/10 p-4 rounded flex items-center justify-between">
+                                <div>
+                                    <p className="font-bold">{s.title} - {s.artist}</p>
+                                    <p className="text-sm text-gray-300">Owner: {getUserName(s.ownerId)}</p>
+                                    <a href={s.tiktokAudioUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-300 hover:underline">Link Audio</a>
+                                </div>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Paste Link Template CapCut..."
+                                        className="px-3 py-1 rounded text-black text-sm w-64"
+                                        value={templateLinks[s.id] || ''}
+                                        onChange={e => setTemplateLinks({...templateLinks, [s.id]: e.target.value})}
+                                    />
+                                    <button 
+                                        onClick={() => handleFulfillCapcut(s.id)}
+                                        className="px-4 py-1 bg-green-500 hover:bg-green-600 rounded text-sm font-bold"
+                                    >
+                                        Simpan
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Add User Section */}
             <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
@@ -238,7 +303,7 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                 <div className="px-6 py-4 border-b border-gray-200">
                     <h3 className="font-bold text-black flex items-center">
                         <Music className="h-5 w-5 mr-2 text-indigo-600" />
-                        Manajemen & Link Sound
+                        Manajemen & Link Sound (Dikelompokkan per User)
                     </h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -247,53 +312,77 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                             <tr>
                                 <th className="px-6 py-3">Kode</th>
                                 <th className="px-6 py-3">Judul / Artis</th>
-                                <th className="px-6 py-3">Pemilik</th>
+                                <th className="px-6 py-3">Genre</th>
                                 <th className="px-6 py-3">Link</th>
                                 <th className="px-6 py-3">Status</th>
+                                <th className="px-6 py-3">Usage</th>
                                 <th className="px-6 py-3">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 text-black">
-                            {allSongs.length === 0 ? (
+                            {allUsers.map(u => {
+                                const userSongs = songsByUser[u.id];
+                                if (!userSongs || userSongs.length === 0) return null;
+
+                                return (
+                                    <React.Fragment key={u.id}>
+                                        <tr className="bg-gray-100 border-t-2 border-gray-200">
+                                            <td colSpan={7} className="px-6 py-2 font-bold text-gray-700">
+                                                <div className="flex items-center">
+                                                    <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded mr-2">{u.userCode}</span>
+                                                    {u.username}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {userSongs.map(s => (
+                                            <tr key={s.id} className="bg-white hover:bg-gray-50">
+                                                <td className="px-6 py-4 font-mono text-gray-500 pl-10">{s.rowCode}</td>
+                                                <td className="px-6 py-4 text-black">
+                                                    <div className="font-medium">{s.title}</div>
+                                                    <div className="text-gray-500 text-xs">{s.artist}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-black">
+                                                    <span className="text-xs bg-gray-200 px-2 py-1 rounded">{s.genre}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-black space-y-1">
+                                                    <a href={s.tiktokAudioUrl} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:text-blue-800 hover:underline">
+                                                        Audio <ExternalLink className="h-3 w-3 ml-1" />
+                                                    </a>
+                                                    {s.capcutTemplateUrl && (
+                                                        <a href={s.capcutTemplateUrl} target="_blank" rel="noreferrer" className="flex items-center text-pink-600 hover:text-pink-800 hover:underline">
+                                                            CapCut <FileVideo className="h-3 w-3 ml-1" />
+                                                        </a>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                        {s.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`font-bold ${s.usageCount === 0 ? 'text-red-500' : 'text-gray-700'}`}>
+                                                        {s.usageCount}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-black">
+                                                    <button 
+                                                        onClick={() => handleDeleteSong(s.id)}
+                                                        className="text-red-600 hover:text-red-900 flex items-center p-2 rounded hover:bg-red-50 transition-colors"
+                                                        title="Hapus Sound"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="ml-1">Hapus</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </React.Fragment>
+                                );
+                            })}
+                            {allSongs.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">Tidak ada sound ditemukan.</td>
+                                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">Tidak ada sound ditemukan.</td>
                                 </tr>
-                            ) : (
-                                allSongs.map(s => (
-                                    <tr key={s.id}>
-                                        <td className="px-6 py-4 font-mono text-black">{s.rowCode}</td>
-                                        <td className="px-6 py-4 text-black">
-                                            <div className="font-medium">{s.title}</div>
-                                            <div className="text-gray-500 text-xs">{s.artist}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-black">{getUserName(s.ownerId)}</td>
-                                        <td className="px-6 py-4 text-black">
-                                            <a 
-                                                href={s.tiktokAudioUrl} 
-                                                target="_blank" 
-                                                rel="noreferrer"
-                                                className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
-                                            >
-                                                Buka <ExternalLink className="h-3 w-3 ml-1" />
-                                            </a>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                {s.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-black">
-                                            <button 
-                                                onClick={() => handleDeleteSong(s.id)}
-                                                className="text-red-600 hover:text-red-900 flex items-center p-2 rounded hover:bg-red-50 transition-colors"
-                                                title="Hapus Sound"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                                <span className="ml-1">Hapus</span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
                             )}
                         </tbody>
                     </table>

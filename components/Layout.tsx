@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Music, CheckSquare, ListTodo, LogOut, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Music, CheckSquare, ListTodo, LogOut, ShieldAlert, Globe } from 'lucide-react';
 import { User, UserRole } from '../types';
 
 interface LayoutProps {
@@ -50,6 +50,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
               <CheckSquare className="mr-3 h-5 w-5" />
               Persetujuan
             </Link>
+             <Link to="/gallery" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/gallery')}`}>
+              <Globe className="mr-3 h-5 w-5" />
+              Galeri Konten
+            </Link>
             {user.role === UserRole.ADMIN && (
                <Link to="/admin" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/admin')}`}>
                <ShieldAlert className="mr-3 h-5 w-5 text-red-400" />
@@ -93,11 +97,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
       </div>
       
       {/* Mobile Nav Bottom */}
-      <div className="md:hidden fixed bottom-0 w-full bg-white border-t flex justify-around py-3 z-50">
-        <Link to="/" className="text-gray-600"><LayoutDashboard className="h-6 w-6" /></Link>
-        <Link to="/songs" className="text-gray-600"><Music className="h-6 w-6" /></Link>
-        <Link to="/tasks" className="text-gray-600"><ListTodo className="h-6 w-6" /></Link>
-        <Link to="/approvals" className="text-gray-600"><CheckSquare className="h-6 w-6" /></Link>
+      <div className="md:hidden fixed bottom-0 w-full bg-white border-t flex justify-around py-3 z-50 overflow-x-auto">
+        <Link to="/" className="text-gray-600 px-2"><LayoutDashboard className="h-6 w-6" /></Link>
+        <Link to="/songs" className="text-gray-600 px-2"><Music className="h-6 w-6" /></Link>
+        <Link to="/tasks" className="text-gray-600 px-2"><ListTodo className="h-6 w-6" /></Link>
+        <Link to="/approvals" className="text-gray-600 px-2"><CheckSquare className="h-6 w-6" /></Link>
+        <Link to="/gallery" className="text-gray-600 px-2"><Globe className="h-6 w-6" /></Link>
       </div>
     </div>
   );
