@@ -46,15 +46,15 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
   return (
     <div className="space-y-6">
         <div>
-            <h1 className="text-2xl font-bold text-gray-900">Approvals</h1>
-            <p className="text-gray-500">Validate content created for your songs.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Persetujuan</h1>
+            <p className="text-gray-500">Validasi konten yang dibuat untuk lagu Anda.</p>
         </div>
 
         <div className="space-y-4">
             {pendingTasks.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
                     <Check className="h-12 w-12 text-gray-200 mx-auto mb-3" />
-                    <p className="text-gray-500">All caught up! No pending approvals.</p>
+                    <p className="text-gray-500">Semua selesai! Tidak ada persetujuan tertunda.</p>
                 </div>
             )}
 
@@ -69,12 +69,12 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
                             {/* Left: Info */}
                             <div className="flex-1">
                                 <h3 className="font-bold text-lg text-gray-900">{song.title}</h3>
-                                <p className="text-sm text-gray-500 mb-4">Created by: {creator?.username || 'Unknown'}</p>
+                                <p className="text-sm text-gray-500 mb-4">Dibuat oleh: {creator?.username || 'Tidak Diketahui'}</p>
                                 
                                 <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Content Submission</p>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Kiriman Konten</p>
                                     <a href={task.contentLink} target="_blank" rel="noreferrer" className="flex items-center text-indigo-600 hover:underline">
-                                        <ExternalLink className="h-4 w-4 mr-2" /> Open TikTok Link
+                                        <ExternalLink className="h-4 w-4 mr-2" /> Buka Link TikTok
                                     </a>
                                 </div>
                             </div>
@@ -84,15 +84,15 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
                                 {rejectId === task.id ? (
                                     <form onSubmit={handleReject} className="space-y-3">
                                         <textarea 
-                                            placeholder="Reason for rejection..."
+                                            placeholder="Alasan penolakan..."
                                             className="w-full text-sm p-2 border rounded"
                                             value={feedback}
                                             onChange={e => setFeedback(e.target.value)}
                                             required
                                         />
                                         <div className="flex gap-2">
-                                            <button type="button" onClick={() => setRejectId(null)} className="flex-1 px-3 py-1.5 text-xs bg-gray-200 rounded">Cancel</button>
-                                            <button type="submit" className="flex-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded">Confirm Reject</button>
+                                            <button type="button" onClick={() => setRejectId(null)} className="flex-1 px-3 py-1.5 text-xs bg-gray-200 rounded">Batal</button>
+                                            <button type="submit" className="flex-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded">Konfirmasi Tolak</button>
                                         </div>
                                     </form>
                                 ) : (
@@ -101,13 +101,13 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
                                             onClick={() => handleApprove(task.id)}
                                             className="w-full flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
                                         >
-                                            <Check className="h-4 w-4 mr-2" /> Approve
+                                            <Check className="h-4 w-4 mr-2" /> Setujui
                                         </button>
                                         <button 
                                             onClick={() => setRejectId(task.id)}
                                             className="w-full flex items-center justify-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md transition-colors"
                                         >
-                                            <X className="h-4 w-4 mr-2" /> Reject
+                                            <X className="h-4 w-4 mr-2" /> Tolak
                                         </button>
                                     </div>
                                 )}

@@ -19,19 +19,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   }, [user]);
 
-  if (!stats) return <div>Loading...</div>;
+  if (!stats) return <div>Memuat...</div>;
 
   const data = [
-    { name: 'Credits', value: stats.credits, color: '#8884d8' },
-    { name: 'Active Songs', value: stats.activeSongs, color: '#82ca9d' },
-    { name: 'Debt', value: stats.debt, color: '#ff8042' },
+    { name: 'Kredit', value: stats.credits, color: '#8884d8' },
+    { name: 'Lagu Aktif', value: stats.activeSongs, color: '#82ca9d' },
+    { name: 'Hutang', value: stats.debt, color: '#ff8042' },
   ];
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.username}</h1>
-        <p className="text-gray-500">Here's what's happening in your barter ecosystem.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Selamat datang kembali, {user.username}</h1>
+        <p className="text-gray-500">Inilah yang terjadi di ekosistem barter Anda.</p>
       </header>
 
       {/* Debt Alert */}
@@ -39,10 +39,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md flex items-start">
           <AlertTriangle className="h-5 w-5 text-red-400 mr-3 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-red-800">Content Debt Alert</h3>
+            <h3 className="text-sm font-medium text-red-800">Peringatan Hutang Konten</h3>
             <p className="text-sm text-red-700 mt-1">
-              You have a content debt of <strong>{stats.debt}</strong> tasks. 
-              Please complete tasks to unlock full features and avoid suspension.
+              Anda memiliki hutang konten sebanyak <strong>{stats.debt}</strong> tugas. 
+              Mohon selesaikan tugas untuk membuka fitur lengkap dan menghindari suspensi.
             </p>
           </div>
         </div>
@@ -53,7 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Current Credits</p>
+              <p className="text-sm font-medium text-gray-500">Kredit Saat Ini</p>
               <p className="text-3xl font-bold text-gray-900">{stats.credits}</p>
             </div>
             <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
@@ -68,7 +68,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Active Songs</p>
+              <p className="text-sm font-medium text-gray-500">Lagu Aktif</p>
               <p className="text-3xl font-bold text-gray-900">{stats.activeSongs}</p>
             </div>
             <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
@@ -76,14 +76,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             In Barter Pool
+             Di Kolam Barter
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Pending Reviews</p>
+              <p className="text-sm font-medium text-gray-500">Menunggu Review</p>
               <p className="text-3xl font-bold text-gray-900">{stats.pendingReviews}</p>
             </div>
             <div className="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
@@ -91,14 +91,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             Requires your approval
+             Butuh persetujuan Anda
           </div>
         </div>
         
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Tasks Required</p>
+              <p className="text-sm font-medium text-gray-500">Tugas Diperlukan</p>
               <p className="text-3xl font-bold text-gray-900">{stats.activeSongs + 1}</p>
             </div>
              <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
@@ -106,14 +106,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             Based on {stats.activeSongs} songs + 1 admin
+             Berdasarkan {stats.activeSongs} lagu + 1 admin
           </div>
         </div>
       </div>
 
       {/* Chart */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Ringkasan Performa</h3>
         <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>

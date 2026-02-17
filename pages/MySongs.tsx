@@ -23,7 +23,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const handleAddSong = (e: React.FormEvent) => {
     e.preventDefault();
     if (songs.length >= 5) {
-        alert("You have reached the maximum limit of 5 songs.");
+        alert("Anda telah mencapai batas maksimum 5 lagu.");
         return;
     }
     db.addSong(user.id, title, artist, url);
@@ -43,15 +43,15 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Songs</h1>
-            <p className="text-gray-500">Manage your songs in the barter pool.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Lagu Saya</h1>
+            <p className="text-gray-500">Kelola lagu Anda di kolam barter.</p>
         </div>
         <button 
             onClick={() => setIsModalOpen(true)}
             disabled={songs.length >= 5}
             className={`flex items-center px-4 py-2 rounded-lg text-white font-medium ${songs.length >= 5 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
         >
-            <Plus className="h-5 w-5 mr-2" /> Add Song ({songs.length}/5)
+            <Plus className="h-5 w-5 mr-2" /> Tambah Lagu ({songs.length}/5)
         </button>
       </div>
 
@@ -67,11 +67,11 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             <h3 className="font-bold text-lg text-gray-900 truncate">{song.title}</h3>
                             {isLocked ? (
                                 <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full flex items-center">
-                                    <Lock className="h-3 w-3 mr-1" /> Locked
+                                    <Lock className="h-3 w-3 mr-1" /> Terkunci
                                 </span>
                             ) : (
                                 <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center">
-                                    <Unlock className="h-3 w-3 mr-1" /> Active
+                                    <Unlock className="h-3 w-3 mr-1" /> Aktif
                                 </span>
                             )}
                         </div>
@@ -82,10 +82,10 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                     </div>
                     
                     <div className="flex items-center justify-between mt-4 text-sm">
-                        <span className="text-gray-500">Used: {song.usageCount} times</span>
+                        <span className="text-gray-500">Dipakai: {song.usageCount} kali</span>
                         {isLocked && daysLeft > 0 && (
                             <span className="flex items-center text-orange-500">
-                                <Clock className="h-4 w-4 mr-1" /> {daysLeft}d left
+                                <Clock className="h-4 w-4 mr-1" /> Sisa {daysLeft} hari
                             </span>
                         )}
                     </div>
@@ -95,7 +95,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
         {songs.length === 0 && (
             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
                 <Music2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No songs submitted yet. Start bartering now!</p>
+                <p className="text-gray-500">Belum ada lagu. Mulai barter sekarang!</p>
             </div>
         )}
       </div>
@@ -104,11 +104,11 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6">
-                <h2 className="text-xl font-bold mb-4">Submit New Song</h2>
+                <h2 className="text-xl font-bold mb-4">Kirim Lagu Baru</h2>
                 <form onSubmit={handleAddSong}>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Song Title</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Lagu</label>
                             <input 
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
@@ -117,7 +117,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Artist</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Artis</label>
                             <input 
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
@@ -126,7 +126,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">TikTok Audio URL</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">URL Audio TikTok</label>
                             <input 
                                 type="url"
                                 required
@@ -143,13 +143,13 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             onClick={() => setIsModalOpen(false)}
                             className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
                         >
-                            Cancel
+                            Batal
                         </button>
                         <button 
                             type="submit"
                             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                         >
-                            Submit Song
+                            Kirim Lagu
                         </button>
                     </div>
                 </form>

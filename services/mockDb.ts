@@ -100,7 +100,7 @@ class MockDB {
 
   addSong(userId: string, title: string, artist: string, url: string): Song {
     const user = this.getUser(userId);
-    if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User tidak ditemukan");
 
     const userSongs = this.getSongsByUser(userId);
     const index = userSongs.length + 1;
@@ -202,7 +202,7 @@ class MockDB {
 
     } else {
       task.status = TaskStatus.REJECTED;
-      task.feedback = feedback || 'Please revise.';
+      task.feedback = feedback || 'Mohon direvisi.';
     }
     this.persist();
   }
@@ -234,7 +234,7 @@ class MockDB {
 
   addUser(username: string): User {
       if (this.users.some(u => u.username === username)) {
-          throw new Error("Username already taken");
+          throw new Error("Username sudah digunakan");
       }
       
       // Basic code generation: U-000X

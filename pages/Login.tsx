@@ -19,7 +19,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         onLogin(user);
         navigate('/');
     } else {
-        setError('User not found. Please contact admin if you need access.');
+        setError('User tidak ditemukan. Hubungi admin jika Anda memerlukan akses.');
     }
   };
 
@@ -28,7 +28,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-indigo-600 p-8 text-center">
                 <h1 className="text-3xl font-bold text-white mb-2">TikTok Barter Hub</h1>
-                <p className="text-indigo-200">Community Content Ecosystem</p>
+                <p className="text-indigo-200">Ekosistem Konten Komunitas</p>
             </div>
             
             <div className="p-8">
@@ -38,7 +38,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <input 
                             type="text" 
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                            placeholder="Enter username"
+                            placeholder="Masukkan username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -49,7 +49,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         type="submit" 
                         className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                     >
-                        Access Dashboard
+                        Masuk Dasbor
                     </button>
                 </form>
             </div>

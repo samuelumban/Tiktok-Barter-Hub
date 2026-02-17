@@ -36,24 +36,24 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
           <nav className="px-3 space-y-1">
             <Link to="/" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/')}`}>
               <LayoutDashboard className="mr-3 h-5 w-5" />
-              Dashboard
+              Dasbor
             </Link>
             <Link to="/songs" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/songs')}`}>
               <Music className="mr-3 h-5 w-5" />
-              My Songs
+              Lagu Saya
             </Link>
             <Link to="/tasks" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/tasks')}`}>
               <ListTodo className="mr-3 h-5 w-5" />
-              My Tasks
+              Tugas Saya
             </Link>
             <Link to="/approvals" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/approvals')}`}>
               <CheckSquare className="mr-3 h-5 w-5" />
-              Approvals
+              Persetujuan
             </Link>
             {user.role === UserRole.ADMIN && (
                <Link to="/admin" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/admin')}`}>
                <ShieldAlert className="mr-3 h-5 w-5 text-red-400" />
-               Admin Panel
+               Panel Admin
              </Link>
             )}
           </nav>
@@ -66,14 +66,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-white">{user.username}</p>
-              <p className="text-xs text-gray-400">{user.tier} Creator</p>
+              <p className="text-xs text-gray-400">Kreator {user.tier}</p>
             </div>
           </div>
           <button 
             onClick={onLogout}
             className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700"
           >
-            <LogOut className="mr-2 h-4 w-4" /> Logout
+            <LogOut className="mr-2 h-4 w-4" /> Keluar
           </button>
         </div>
       </div>
