@@ -125,6 +125,11 @@ class MockDB {
     return newSong;
   }
 
+  deleteSong(songId: string): void {
+    this.songs = this.songs.filter(s => s.id !== songId);
+    this.persist();
+  }
+
   // --- Tasks (The Assignment Engine) ---
   getTasksByAssignee(userId: string): Task[] {
     return this.tasks.filter(t => t.assigneeId === userId);

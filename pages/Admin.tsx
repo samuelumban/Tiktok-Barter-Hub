@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../services/mockDb';
 import { User, UserRole } from '../types';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Trash2, Music } from 'lucide-react';
 
 interface AdminProps {
     user: User;
@@ -10,12 +10,12 @@ interface AdminProps {
 export const Admin: React.FC<AdminProps> = ({ user }) => {
     // Initialize state with all users to allow refreshing the list
     const [allUsers, setAllUsers] = useState(db.getAllUsers());
+    const [allSongs, setAllSongs] = useState(db.getAllSongs());
     const [newUsername, setNewUsername] = useState('');
 
     if (user.role !== UserRole.ADMIN) return <div>Access Denied</div>;
 
     const allTasks = db.getAllTasks();
-    const allSongs = db.getAllSongs();
 
     const handleAddUser = (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,6 +29,18 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         } catch (err: any) {
             alert(err.message || "Failed to add user");
         }
+    };
+
+    const handleDeleteSong = (songId: string) => {
+        if (window.confirm("Are you sure you want to delete this song?")) {
+            db.deleteSong(songId);
+            setAllSongs([...db.getAllSongs()]);
+        }
+    };
+
+    const getUserName = (userId: string) => {
+        const u = allUsers.find(user => user.id === userId);
+        return u ? u.username : 'Unknown';
     };
 
     return (
@@ -108,6 +120,62 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
                                     <td className="px-6 py-4 text-black">{new Date(u.lastActivity).toLocaleDateString()}</td>
                                 </tr>
                             ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Song Management */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="font-bold text-black flex items-center">
+                        <Music className="h-5 w-5 mr-2 text-indigo-600" />
+                        Song Management
+                    </h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50 text-black uppercase">
+                            <tr>
+                                <th className="px-6 py-3">Code</th>
+                                <th className="px-6 py-3">Title / Artist</th>
+                                <th className="px-6 py-3">Owner</th>
+                                <th className="px-6 py-3">Status</th>
+                                <th className="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 text-black">
+                            {allSongs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">No songs found.</td>
+                                </tr>
+                            ) : (
+                                allSongs.map(s => (
+                                    <tr key={s.id}>
+                                        <td className="px-6 py-4 font-mono text-black">{s.rowCode}</td>
+                                        <td className="px-6 py-4 text-black">
+                                            <div className="font-medium">{s.title}</div>
+                                            <div className="text-gray-500 text-xs">{s.artist}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-black">{getUserName(s.ownerId)}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                {s.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-black">
+                                            <button 
+                                                onClick={() => handleDeleteSong(s.id)}
+                                                className="text-red-600 hover:text-red-900 flex items-center p-2 rounded hover:bg-red-50 transition-colors"
+                                                title="Delete Song"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="ml-1">Delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
