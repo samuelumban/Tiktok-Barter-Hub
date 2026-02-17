@@ -23,7 +23,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   const data = [
     { name: 'Kredit', value: stats.credits, color: '#8884d8' },
-    { name: 'Lagu Aktif', value: stats.activeSongs, color: '#82ca9d' },
+    { name: 'Sound Anda', value: stats.activeSongs, color: '#82ca9d' },
     { name: 'Hutang', value: stats.debt, color: '#ff8042' },
   ];
 
@@ -68,7 +68,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Lagu Aktif</p>
+              <p className="text-sm font-medium text-gray-500">Sound Anda</p>
               <p className="text-3xl font-bold text-gray-900">{stats.activeSongs}</p>
             </div>
             <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
@@ -76,7 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             Di Kolam Barter
+             Di Sistem Barter
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             Lagu Random dari user
+             Sound Random dari user
           </div>
         </div>
       </div>

@@ -14,9 +14,14 @@ export interface User {
   id: string;
   userCode: string; // U-0001
   username: string;
+  password?: string; // New field
+  name?: string;     // New field
+  phoneNumber?: string; // New field
+  email?: string;    // New field
   role: UserRole;
   credits: number;
-  lastActivity: string; // ISO Date
+  lastActivity: string; // ISO Date (Login/Navigation)
+  lastTaskSubmission?: string; // ISO Date (Content Creation Activity)
   isActive: boolean;
   tier: UserTier;
 }

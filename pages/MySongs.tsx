@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Song, SongStatus } from '../types';
 import { db } from '../services/mockDb';
-import { Lock, Unlock, Plus, Clock, Music2 } from 'lucide-react';
+import { Lock, Unlock, Plus, Clock, Music2, Info } from 'lucide-react';
 
 interface MySongsProps {
   user: User;
@@ -23,7 +23,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const handleAddSong = (e: React.FormEvent) => {
     e.preventDefault();
     if (songs.length >= 5) {
-        alert("Anda telah mencapai batas maksimum 5 lagu.");
+        alert("Anda telah mencapai batas maksimum 5 sound.");
         return;
     }
     db.addSong(user.id, title, artist, url);
@@ -43,15 +43,15 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-            <h1 className="text-2xl font-bold text-gray-900">Lagu Saya</h1>
-            <p className="text-gray-500">Kelola lagu Anda di kolam barter.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Sound Saya</h1>
+            <p className="text-gray-500">Kelola sound Anda di sistem barter.</p>
         </div>
         <button 
             onClick={() => setIsModalOpen(true)}
             disabled={songs.length >= 5}
             className={`flex items-center px-4 py-2 rounded-lg text-white font-medium ${songs.length >= 5 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
         >
-            <Plus className="h-5 w-5 mr-2" /> Tambah Lagu ({songs.length}/5)
+            <Plus className="h-5 w-5 mr-2" /> Tambah Sound ({songs.length}/5)
         </button>
       </div>
 
@@ -95,20 +95,27 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
         {songs.length === 0 && (
             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
                 <Music2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">Belum ada lagu. Mulai barter sekarang!</p>
+                <p className="text-gray-500">Belum ada sound. Mulai barter sekarang!</p>
             </div>
         )}
+      </div>
+
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start mt-4">
+        <Info className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-blue-800">
+            Tambahkan sound Anda maksimal 5 sound, dan akan dikunci selama 7 hari untuk mengganti sound lain.
+        </p>
       </div>
 
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6">
-                <h2 className="text-xl font-bold mb-4">Kirim Lagu Baru</h2>
+                <h2 className="text-xl font-bold mb-4">Kirim Sound Baru</h2>
                 <form onSubmit={handleAddSong}>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Lagu</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Judul Sound</label>
                             <input 
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
@@ -149,7 +156,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             type="submit"
                             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                         >
-                            Kirim Lagu
+                            Kirim Sound
                         </button>
                     </div>
                 </form>

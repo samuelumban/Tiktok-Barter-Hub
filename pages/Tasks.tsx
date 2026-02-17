@@ -30,7 +30,7 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
             if (newTask) {
                 refreshTasks();
             } else {
-                alert("Tidak ada lagu tersedia saat ini. Coba lagi nanti!");
+                alert("Tidak ada sound tersedia saat ini. Coba lagi nanti!");
             }
         } catch (err: any) {
             alert(err.message);
@@ -68,14 +68,14 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
        <div className="flex justify-between items-center">
         <div>
             <h1 className="text-2xl font-bold text-gray-900">Tugas Saya</h1>
-            <p className="text-gray-500">Buat konten, dapatkan kredit.</p>
+            <p className="text-gray-500">Buat konten.</p>
         </div>
         <button 
             onClick={handleGetTask}
             disabled={loading}
             className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-lg shadow-md hover:from-pink-600 hover:to-rose-600 transition-all transform hover:-translate-y-0.5"
         >
-            {loading ? 'Mencari Lagu...' : 'Ambil Tugas Baru'}
+            {loading ? 'Mencari Sound...' : 'Ambil Tugas Baru'}
         </button>
       </div>
 

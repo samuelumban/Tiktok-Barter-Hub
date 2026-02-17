@@ -40,7 +40,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             </Link>
             <Link to="/songs" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/songs')}`}>
               <Music className="mr-3 h-5 w-5" />
-              Lagu Saya
+              Sound Saya
             </Link>
             <Link to="/tasks" className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive('/tasks')}`}>
               <ListTodo className="mr-3 h-5 w-5" />

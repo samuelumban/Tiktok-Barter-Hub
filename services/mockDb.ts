@@ -6,9 +6,14 @@ const MOCK_USERS: User[] = [
     id: 'admin',
     userCode: 'A-0000',
     username: 'mimin.samuel',
+    password: 'lombardo',
+    name: 'Samuel Admin',
+    email: 'admin@barterhub.id',
+    phoneNumber: '081234567890',
     role: UserRole.ADMIN,
     credits: 999,
     lastActivity: new Date().toISOString(),
+    lastTaskSubmission: new Date().toISOString(),
     isActive: true,
     tier: UserTier.TOP_TIER
   }
@@ -53,9 +58,14 @@ class MockDB {
   }
 
   // --- Auth ---
-  login(username: string): User | null {
+  login(username: string, password?: string): User | null {
     const user = this.users.find(u => u.username === username);
     if (!user) return null;
+
+    // Simple password check
+    if (user.password && user.password !== password) {
+        return null; 
+    }
 
     // Inactivity Check
     const lastActive = new Date(user.lastActivity).getTime();
@@ -83,6 +93,36 @@ class MockDB {
     user.lastActivity = new Date().toISOString();
     this.persist();
     return user;
+  }
+
+  registerUser(data: { name: string; username: string; password: string; phoneNumber: string; email: string }): User {
+    if (this.users.some(u => u.username === data.username)) {
+        throw new Error("Username sudah digunakan");
+    }
+
+    const creators = this.users.filter(u => u.role === UserRole.CREATOR);
+    const nextNum = creators.length + 1;
+    const userCode = `U-${String(nextNum).padStart(4, '0')}`;
+
+    const newUser: User = {
+        id: `u_${Date.now()}`,
+        userCode: userCode,
+        username: data.username,
+        password: data.password,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
+        role: UserRole.CREATOR,
+        credits: 5,
+        lastActivity: new Date().toISOString(),
+        lastTaskSubmission: new Date().toISOString(), // Initialize as active
+        isActive: true,
+        tier: UserTier.BRONZE
+    };
+
+    this.users.push(newUser);
+    this.persist();
+    return newUser;
   }
 
   getUser(id: string): User | undefined {
@@ -148,7 +188,7 @@ class MockDB {
     const tasksToday = userTasks.filter(t => new Date(t.createdAt).toDateString() === today);
 
     if (tasksToday.length >= 5) {
-        throw new Error("Batas harian tercapai (Maks 5 lagu/hari).");
+        throw new Error("Batas harian tercapai (Maks 5 sound/hari).");
     }
 
     // 1. Get eligible songs (Active, not owned by user)
@@ -187,6 +227,13 @@ class MockDB {
       task.status = TaskStatus.SUBMITTED;
       task.contentLink = link;
       task.submittedAt = new Date().toISOString();
+      
+      // Update User Activity (Traffic Light System)
+      const user = this.getUser(task.assigneeId);
+      if (user) {
+          user.lastTaskSubmission = new Date().toISOString();
+      }
+
       this.persist();
     }
   }
@@ -247,12 +294,11 @@ class MockDB {
   getAllTasks() { return this.tasks; }
 
   addUser(username: string): User {
+      // Kept for backward compatibility with existing Admin.tsx simple add
       if (this.users.some(u => u.username === username)) {
           throw new Error("Username sudah digunakan");
       }
       
-      // Basic code generation: U-000X
-      // Filter only creators to count for U-XXXX codes
       const creators = this.users.filter(u => u.role === UserRole.CREATOR);
       const nextNum = creators.length + 1;
       const userCode = `U-${String(nextNum).padStart(4, '0')}`;
@@ -261,9 +307,11 @@ class MockDB {
           id: `u_${Date.now()}`,
           userCode: userCode,
           username: username,
+          password: 'password123', // Default password for admin created users
           role: UserRole.CREATOR,
-          credits: 5, // Default starting credits
+          credits: 5,
           lastActivity: new Date().toISOString(),
+          lastTaskSubmission: new Date().toISOString(),
           isActive: true,
           tier: UserTier.BRONZE
       };

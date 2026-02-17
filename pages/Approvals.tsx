@@ -47,7 +47,7 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
     <div className="space-y-6">
         <div>
             <h1 className="text-2xl font-bold text-gray-900">Persetujuan</h1>
-            <p className="text-gray-500">Validasi konten yang dibuat untuk lagu Anda.</p>
+            <p className="text-gray-500">Validasi konten yang dibuat untuk sound Anda.</p>
         </div>
 
         <div className="space-y-4">
