@@ -125,8 +125,43 @@ class MockDB {
     return newUser;
   }
 
+  resetPassword(username: string, phoneNumber: string, newPassword: string): boolean {
+    const user = this.users.find(u => u.username === username);
+    if (!user) {
+        throw new Error("Username tidak ditemukan.");
+    }
+    
+    // Normalize phone numbers for comparison (remove spaces, dashes)
+    const cleanInputPhone = phoneNumber.replace(/\D/g, '');
+    const cleanUserPhone = (user.phoneNumber || '').replace(/\D/g, '');
+
+    if (cleanInputPhone !== cleanUserPhone) {
+        throw new Error("Nomor HP tidak cocok dengan data pengguna.");
+    }
+
+    user.password = newPassword;
+    this.persist();
+    return true;
+  }
+
   getUser(id: string): User | undefined {
     return this.users.find(u => u.id === id);
+  }
+
+  updateUser(id: string, updates: Partial<User>): User {
+    const user = this.users.find(u => u.id === id);
+    if (!user) throw new Error("User tidak ditemukan");
+
+    // Prevent duplicate username if username is being changed
+    if (updates.username && updates.username !== user.username) {
+        if (this.users.some(u => u.username === updates.username)) {
+            throw new Error("Username sudah digunakan user lain.");
+        }
+    }
+
+    Object.assign(user, updates);
+    this.persist();
+    return user;
   }
 
   // --- Songs ---
