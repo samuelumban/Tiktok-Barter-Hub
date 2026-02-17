@@ -106,7 +106,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </div>
           </div>
           <div className="mt-4 text-xs text-gray-500">
-             Berdasarkan {stats.activeSongs} lagu + 1 admin
+             Lagu Random dari user
           </div>
         </div>
       </div>

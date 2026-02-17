@@ -142,18 +142,22 @@ class MockDB {
   }
 
   assignRandomTask(userId: string): Task | null {
+    // Check daily limit (5 tasks per day)
+    const today = new Date().toDateString();
+    const userTasks = this.getTasksByAssignee(userId);
+    const tasksToday = userTasks.filter(t => new Date(t.createdAt).toDateString() === today);
+
+    if (tasksToday.length >= 5) {
+        throw new Error("Batas harian tercapai (Maks 5 lagu/hari).");
+    }
+
     // 1. Get eligible songs (Active, not owned by user)
     let eligibleSongs = this.songs.filter(
       s => s.ownerId !== userId && s.status === SongStatus.ACTIVE
     );
 
     // Filter out songs that have already been assigned to this user TODAY
-    const today = new Date().toDateString();
-    const userTasks = this.getTasksByAssignee(userId);
-    
-    const songsAssignedToday = userTasks
-      .filter(t => new Date(t.createdAt).toDateString() === today)
-      .map(t => t.songId);
+    const songsAssignedToday = tasksToday.map(t => t.songId);
 
     eligibleSongs = eligibleSongs.filter(s => !songsAssignedToday.includes(s.id));
 

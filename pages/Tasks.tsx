@@ -25,11 +25,15 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
     setLoading(true);
     // Simulate finding a task
     setTimeout(() => {
-        const newTask = db.assignRandomTask(user.id);
-        if (newTask) {
-            refreshTasks();
-        } else {
-            alert("Tidak ada lagu tersedia saat ini. Coba lagi nanti!");
+        try {
+            const newTask = db.assignRandomTask(user.id);
+            if (newTask) {
+                refreshTasks();
+            } else {
+                alert("Tidak ada lagu tersedia saat ini. Coba lagi nanti!");
+            }
+        } catch (err: any) {
+            alert(err.message);
         }
         setLoading(false);
     }, 800);
