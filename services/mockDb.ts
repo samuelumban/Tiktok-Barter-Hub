@@ -143,9 +143,19 @@ class MockDB {
 
   assignRandomTask(userId: string): Task | null {
     // 1. Get eligible songs (Active, not owned by user)
-    const eligibleSongs = this.songs.filter(
+    let eligibleSongs = this.songs.filter(
       s => s.ownerId !== userId && s.status === SongStatus.ACTIVE
     );
+
+    // Filter out songs that have already been assigned to this user TODAY
+    const today = new Date().toDateString();
+    const userTasks = this.getTasksByAssignee(userId);
+    
+    const songsAssignedToday = userTasks
+      .filter(t => new Date(t.createdAt).toDateString() === today)
+      .map(t => t.songId);
+
+    eligibleSongs = eligibleSongs.filter(s => !songsAssignedToday.includes(s.id));
 
     if (eligibleSongs.length === 0) return null;
 
