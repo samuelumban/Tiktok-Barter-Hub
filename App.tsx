@@ -12,24 +12,22 @@ import { User } from './types';
 import { db } from './services/mockDb';
 
 const App: React.FC = () => {
-  // Simple state auth for demo purposes
-  const [user, setUser] = useState<User | null>(null);
+  // Initialize state with session data to persist login
+  const [user, setUser] = useState<User | null>(() => db.getSession());
 
   useEffect(() => {
     // Subscribe to DB updates to keep user state fresh
     const unsubscribe = db.subscribe(() => {
-      if (user) {
-        const freshUser = db.getUser(user.id);
-        if (freshUser) {
-          setUser(freshUser);
-        } else {
-          // User might have been deleted
-          setUser(null);
-        }
+      // Check if current user still exists or session changed
+      const sessionUser = db.getSession();
+      if (sessionUser) {
+        setUser(sessionUser);
+      } else {
+        setUser(null);
       }
     });
     return unsubscribe;
-  }, [user]);
+  }, []);
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);

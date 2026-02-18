@@ -23,6 +23,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
     }
   }, [user, location.pathname]); // Update badge when location changes (user might have approved stuff)
 
+  const handleLogout = () => {
+      db.clearSession();
+      onLogout();
+  };
+
   if (!user) {
     return <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">{children}</div>;
   }
@@ -113,7 +118,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
             </div>
           </div>
           <button 
-            onClick={onLogout}
+            onClick={handleLogout}
             className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-800 hover:bg-gray-700"
           >
             <LogOut className="mr-2 h-4 w-4" /> Keluar
@@ -126,7 +131,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
         {/* Mobile Header */}
         <div className="md:hidden h-16 bg-gray-900 flex items-center justify-between px-4 text-white">
           <span className="font-bold">Barter Hub</span>
-          <button onClick={onLogout}><LogOut className="h-5 w-5" /></button>
+          <button onClick={handleLogout}><LogOut className="h-5 w-5" /></button>
         </div>
 
         {/* Scroll Area */}

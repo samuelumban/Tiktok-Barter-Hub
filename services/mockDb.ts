@@ -90,6 +90,28 @@ class MockDB {
     this.notify();
   }
 
+  // --- Session Management ---
+  getSession(): User | null {
+      const stored = localStorage.getItem(KEYS.CURRENT_USER);
+      if (!stored) return null;
+      try {
+          const sessionUser = JSON.parse(stored);
+          // Verify user still exists in DB
+          const dbUser = this.users.find(u => u.id === sessionUser.id);
+          return dbUser || null;
+      } catch {
+          return null;
+      }
+  }
+
+  saveSession(user: User) {
+      localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
+  }
+
+  clearSession() {
+      localStorage.removeItem(KEYS.CURRENT_USER);
+  }
+
   // --- Auth ---
   login(username: string, password?: string): User | null {
     // Ensure data is fresh before login attempt
@@ -105,7 +127,6 @@ class MockDB {
     const now = new Date();
     
     // PENALTY LOGIC
-    // Reset penalty week counter if it's a new week (simplification: based on lastPenaltyDate > 7 days)
     if (user.lastPenaltyDate) {
         const lastPenalty = new Date(user.lastPenaltyDate).getTime();
         if ((now.getTime() - lastPenalty) > 7 * 24 * 60 * 60 * 1000) {
@@ -118,11 +139,8 @@ class MockDB {
         const lastSub = new Date(user.lastTaskSubmission).getTime();
         const diffHours = (now.getTime() - lastSub) / (1000 * 60 * 60);
         
-        // If inactive > 24 hours AND haven't reached max penalty (10)
         if (diffHours > 24 && user.penaltyPointsWeek < 10) {
-            // Apply 5 point penalty
             const pointsToDeduct = 5;
-            // Ensure we don't deduct more than allowed weekly limit remaining
             const allowedDeduction = Math.min(pointsToDeduct, 10 - user.penaltyPointsWeek);
             
             if (allowedDeduction > 0) {
@@ -132,7 +150,6 @@ class MockDB {
             }
         }
     }
-
 
     // Inactivity Check (Status)
     const lastActive = new Date(user.lastActivity).getTime();
@@ -156,6 +173,7 @@ class MockDB {
 
     user.lastActivity = now.toISOString();
     this.persist();
+    this.saveSession(user); // Auto save session on login
     return user;
   }
 
@@ -186,11 +204,12 @@ class MockDB {
         isActive: true,
         tier: UserTier.BRONZE,
         penaltyPointsWeek: 0,
-        hasSeenOnboarding: false // New users need onboarding
+        hasSeenOnboarding: false 
     };
 
     this.users.push(newUser);
     this.persist();
+    this.saveSession(newUser); // Auto save session on register
     return newUser;
   }
 
@@ -203,6 +222,7 @@ class MockDB {
       user.contentCategory = data.category;
       
       this.persist();
+      this.saveSession(user); // Update session
       return user;
   }
   
@@ -211,13 +231,12 @@ class MockDB {
       if (user) {
           user.hasSeenOnboarding = true;
           this.persist();
+          this.saveSession(user);
       }
   }
 
   resetPassword(username: string, phoneNumber: string, newPassword: string): boolean {
-    // Reload to ensure we find the user
     this.reload();
-    
     const user = this.users.find(u => u.username === username);
     if (!user) {
         throw new Error("Username tidak ditemukan.");
@@ -290,6 +309,20 @@ class MockDB {
     this.songs.push(newSong);
     this.persist();
     return newSong;
+  }
+
+  updateSong(songId: string, updates: Partial<Song>) {
+      const song = this.songs.find(s => s.id === songId);
+      if (!song) throw new Error("Sound tidak ditemukan");
+
+      Object.assign(song, updates);
+      
+      // Auto update status if capcut URL is added
+      if (updates.capcutTemplateUrl && song.capcutStatus !== CapcutStatus.COMPLETED) {
+          song.capcutStatus = CapcutStatus.COMPLETED;
+      }
+
+      this.persist();
   }
 
   deleteSong(songId: string): void {
@@ -381,6 +414,7 @@ class MockDB {
       }
 
       this.persist();
+      this.saveSession(user!); // Update session activity
     }
   }
 
@@ -393,12 +427,10 @@ class MockDB {
       task.completedAt = new Date().toISOString();
       task.rating = rating || 5;
       
-      // Credit Logic: +10 Points per success content
       const assignee = this.users.find(u => u.id === task.assigneeId);
       if (assignee) {
         assignee.credits += 10;
         
-        // Tier Update
         if (assignee.credits >= 1000) assignee.tier = UserTier.TOP_TIER;
         else if (assignee.credits >= 500) assignee.tier = UserTier.GOLD;
         else if (assignee.credits >= 200) assignee.tier = UserTier.SILVER;
@@ -460,7 +492,7 @@ class MockDB {
           isActive: true,
           tier: UserTier.BRONZE,
           penaltyPointsWeek: 0,
-          hasSeenOnboarding: true // Admin created, assume active/trained
+          hasSeenOnboarding: true 
       };
       
       this.users.push(newUser);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Song, SongStatus, SongGenre } from '../types';
 import { db } from '../services/mockDb';
-import { Lock, Unlock, Plus, Clock, Music2, Info, FileVideo } from 'lucide-react';
+import { Lock, Unlock, Plus, Clock, Music2, Info, FileVideo, Pencil } from 'lucide-react';
 
 interface MySongsProps {
   user: User;
@@ -14,6 +14,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Form State
+  const [editingSongId, setEditingSongId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
@@ -29,14 +30,48 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
     return db.subscribe(refreshSongs);
   }, [user]);
 
-  const handleAddSong = (e: React.FormEvent) => {
+  const openAddModal = () => {
+      setEditingSongId(null);
+      setTitle('');
+      setArtist('');
+      setUrl('');
+      setGenre('Pop');
+      setCapcutUrl('');
+      setIsModalOpen(true);
+  };
+
+  const openEditModal = (song: Song) => {
+      setEditingSongId(song.id);
+      setTitle(song.title);
+      setArtist(song.artist);
+      setUrl(song.tiktokAudioUrl);
+      setGenre(song.genre || 'Pop');
+      setCapcutUrl(song.capcutTemplateUrl || '');
+      setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (songs.length >= 5) {
-        alert("Anda telah mencapai batas maksimum 5 sound.");
-        return;
-    }
+    
     try {
-        db.addSong(user.id, title, artist, url, genre, capcutUrl || undefined);
+        if (editingSongId) {
+            // Edit Mode
+            db.updateSong(editingSongId, {
+                title,
+                artist,
+                tiktokAudioUrl: url,
+                genre,
+                capcutTemplateUrl: capcutUrl || undefined
+            });
+        } else {
+            // Add Mode
+            if (songs.length >= 5) {
+                alert("Anda telah mencapai batas maksimum 5 sound.");
+                return;
+            }
+            db.addSong(user.id, title, artist, url, genre, capcutUrl || undefined);
+        }
+        
         setIsModalOpen(false);
         // Reset Form
         setTitle('');
@@ -44,6 +79,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
         setUrl('');
         setGenre('Pop');
         setCapcutUrl('');
+        setEditingSongId(null);
     } catch (err: any) {
         alert(err.message);
     }
@@ -62,7 +98,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
             <p className="text-gray-500">Kelola sound Anda di sistem barter.</p>
         </div>
         <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={openAddModal}
             disabled={songs.length >= 5}
             className={`flex items-center px-4 py-2 rounded-lg text-white font-medium ${songs.length >= 5 ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
         >
@@ -76,7 +112,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
              const isLocked = song.status === SongStatus.LOCKED;
              
              return (
-                <div key={song.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between h-56">
+                <div key={song.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between h-56 relative group">
                     <div>
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="font-bold text-lg text-gray-900 truncate pr-2">{song.title}</h3>
@@ -113,6 +149,15 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                                 <Clock className="h-4 w-4 mr-1" /> Sisa {daysLeft} hari
                             </span>
                         )}
+                        {!isLocked && (
+                            <button 
+                                onClick={() => openEditModal(song)}
+                                className="absolute bottom-4 right-4 bg-white border border-gray-300 p-1.5 rounded-full shadow hover:bg-gray-50 text-gray-600"
+                                title="Edit Sound"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
                 </div>
              );
@@ -136,8 +181,8 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4">Tambah Sound Baru</h2>
-                <form onSubmit={handleAddSong}>
+                <h2 className="text-xl font-bold mb-4">{editingSongId ? 'Edit Sound' : 'Tambah Sound Baru'}</h2>
+                <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Judul Sound</label>
@@ -204,7 +249,7 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
                             type="submit"
                             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                         >
-                            Tambah
+                            {editingSongId ? 'Simpan Perubahan' : 'Tambah'}
                         </button>
                     </div>
                 </form>
