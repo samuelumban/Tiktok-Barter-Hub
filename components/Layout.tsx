@@ -57,6 +57,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
     ? "bg-indigo-600 text-white shadow-lg" 
     : "text-gray-300 hover:bg-gray-800 hover:text-white";
 
+  const isMobileActive = (path: string) => location.pathname === path 
+    ? "text-indigo-600" 
+    : "text-gray-400";
+
   // Onboarding Data
   const steps = [
       { target: 'dashboard', title: 'Dasbor Utama', text: 'Lihat statistik, aset sound, dan riwayat konten Anda di sini.' },
@@ -167,7 +171,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
         </div>
 
         {/* Scroll Area */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 pb-24 md:pb-6">
             {children}
         </main>
 
@@ -194,17 +198,34 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
       </div>
       
       {/* Mobile Nav Bottom */}
-      <div className="md:hidden fixed bottom-0 w-full bg-white border-t flex justify-around py-3 z-50 overflow-x-auto">
-        <Link to="/" className="text-gray-600 px-2"><LayoutDashboard className="h-6 w-6" /></Link>
-        <Link to="/songs" className="text-gray-600 px-2"><Music className="h-6 w-6" /></Link>
-        <Link to="/tasks" className="text-gray-600 px-2"><ListTodo className="h-6 w-6" /></Link>
+      <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-between items-center px-6 py-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <Link to="/" className={`flex flex-col items-center justify-center ${isMobileActive('/')}`}>
+            <LayoutDashboard className="h-6 w-6" />
+            <span className="text-[10px] mt-1 font-medium">Dasbor</span>
+        </Link>
+        <Link to="/songs" className={`flex flex-col items-center justify-center ${isMobileActive('/songs')}`}>
+            <Music className="h-6 w-6" />
+            <span className="text-[10px] mt-1 font-medium">Sound</span>
+        </Link>
+        <Link to="/tasks" className={`flex flex-col items-center justify-center ${isMobileActive('/tasks')}`}>
+            <ListTodo className="h-6 w-6" />
+            <span className="text-[10px] mt-1 font-medium">Tugas</span>
+        </Link>
         <div className="relative">
-            <Link to="/approvals" className="text-gray-600 px-2"><CheckSquare className="h-6 w-6" /></Link>
+            <Link to="/approvals" className={`flex flex-col items-center justify-center ${isMobileActive('/approvals')}`}>
+                <CheckSquare className="h-6 w-6" />
+                <span className="text-[10px] mt-1 font-medium">Review</span>
+            </Link>
             {pendingCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 h-3 w-3 rounded-full border border-white"></span>
+                <span className="absolute top-0 right-1 bg-red-500 text-[9px] text-white h-4 w-4 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                    {pendingCount}
+                </span>
             )}
         </div>
-        <Link to="/gallery" className="text-gray-600 px-2"><Globe className="h-6 w-6" /></Link>
+        <Link to="/gallery" className={`flex flex-col items-center justify-center ${isMobileActive('/gallery')}`}>
+            <Globe className="h-6 w-6" />
+            <span className="text-[10px] mt-1 font-medium">Galeri</span>
+        </Link>
       </div>
     </div>
   );

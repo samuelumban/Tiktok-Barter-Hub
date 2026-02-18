@@ -326,16 +326,18 @@ class MockDB {
     return newTask;
   }
 
-  submitTask(taskId: string, link: string): void {
+  submitTask(taskId: string, link: string, submittedAt?: string): void {
     const task = this.tasks.find(t => t.id === taskId);
     if (task) {
       task.status = TaskStatus.SUBMITTED;
       task.contentLink = link;
-      task.submittedAt = new Date().toISOString();
+      // Use provided date or fallback to now
+      const submissionDate = submittedAt || new Date().toISOString();
+      task.submittedAt = submissionDate;
       
       const user = this.getUser(task.assigneeId);
       if (user) {
-          user.lastTaskSubmission = new Date().toISOString();
+          user.lastTaskSubmission = submissionDate;
       }
 
       this.persist();

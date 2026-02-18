@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Task, Song, TaskStatus } from '../types';
 import { db } from '../services/mockDb';
-import { PlayCircle, ExternalLink, Send, CheckCircle, XCircle, FileVideo } from 'lucide-react';
+import { PlayCircle, ExternalLink, Send, CheckCircle, XCircle, FileVideo, Calendar } from 'lucide-react';
 
 interface TasksProps {
   user: User;
@@ -12,6 +12,7 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [submitTaskId, setSubmitTaskId] = useState<string | null>(null);
   const [submitLink, setSubmitLink] = useState('');
+  const [submitDate, setSubmitDate] = useState('');
 
   const refreshTasks = () => {
     setTasks(db.getTasksByAssignee(user.id));
@@ -39,12 +40,30 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
     }, 800);
   };
 
+  const getCurrentDateTimeLocal = () => {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      return now.toISOString().slice(0, 16);
+  };
+
+  const handleOpenSubmit = (taskId: string) => {
+      setSubmitTaskId(taskId);
+      setSubmitDate(getCurrentDateTimeLocal());
+  };
+
   const handleSubmitContent = (e: React.FormEvent) => {
     e.preventDefault();
     if (submitTaskId && submitLink) {
-        db.submitTask(submitTaskId, submitLink);
+        // Use the selected date or current time if empty (fallback)
+        let isoDate = undefined;
+        if (submitDate) {
+            isoDate = new Date(submitDate).toISOString();
+        }
+        
+        db.submitTask(submitTaskId, submitLink, isoDate);
         setSubmitTaskId(null);
         setSubmitLink('');
+        setSubmitDate('');
         refreshTasks();
     }
   };
@@ -123,7 +142,7 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
                         <div className="mt-4 md:mt-0 flex-shrink-0">
                             {task.status === TaskStatus.PENDING || task.status === TaskStatus.REJECTED ? (
                                 submitTaskId === task.id ? (
-                                    <form onSubmit={handleSubmitContent} className="flex flex-col space-y-2">
+                                    <form onSubmit={handleSubmitContent} className="flex flex-col space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <input 
                                             type="url" 
                                             placeholder="Paste Link TikTok Disini" 
@@ -132,9 +151,19 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
                                             onChange={e => setSubmitLink(e.target.value)}
                                             required
                                         />
-                                        <div className="flex space-x-2">
-                                            <button type="submit" className="flex-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex justify-center items-center">
-                                                <Send className="h-4 w-4 mr-1" /> Kirim
+                                        <div className="flex items-center space-x-2">
+                                            <Calendar className="h-4 w-4 text-gray-500" />
+                                            <input 
+                                                type="datetime-local"
+                                                className="px-2 py-1.5 border rounded-md text-xs w-full focus:ring-2 focus:ring-indigo-500"
+                                                value={submitDate}
+                                                onChange={e => setSubmitDate(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="flex space-x-2 pt-1">
+                                            <button type="submit" className="flex-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex justify-center items-center text-sm font-medium">
+                                                <Send className="h-3 w-3 mr-1" /> Kirim
                                             </button>
                                             <button type="button" onClick={() => setSubmitTaskId(null)} className="px-3 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
                                                 <XCircle className="h-4 w-4" />
@@ -143,7 +172,7 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
                                     </form>
                                 ) : (
                                     <button 
-                                        onClick={() => setSubmitTaskId(task.id)}
+                                        onClick={() => handleOpenSubmit(task.id)}
                                         className="px-4 py-2 border-2 border-indigo-600 text-indigo-600 rounded-md text-sm font-bold hover:bg-indigo-50"
                                     >
                                         Setor Link Konten
