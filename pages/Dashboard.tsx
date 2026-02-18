@@ -26,8 +26,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   // CapCut Request State
   const [selectedSongForCapcut, setSelectedSongForCapcut] = useState('');
 
-  useEffect(() => {
-    // Refresh user data
+  const refreshData = () => {
     const freshUser = db.getUser(user.id);
     if (freshUser) {
         setStats(db.getStats(freshUser.id));
@@ -43,6 +42,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             setShowProfileModal(true);
         }
     }
+  };
+
+  useEffect(() => {
+    refreshData();
+    return db.subscribe(refreshData);
   }, [user]);
 
   const handleProfileSubmit = (e: React.FormEvent) => {

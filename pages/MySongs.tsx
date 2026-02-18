@@ -20,8 +20,13 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const [genre, setGenre] = useState<SongGenre>('Pop');
   const [capcutUrl, setCapcutUrl] = useState('');
 
-  useEffect(() => {
+  const refreshSongs = () => {
     setSongs(db.getSongsByUser(user.id));
+  };
+
+  useEffect(() => {
+    refreshSongs();
+    return db.subscribe(refreshSongs);
   }, [user]);
 
   const handleAddSong = (e: React.FormEvent) => {
@@ -32,7 +37,6 @@ export const MySongs: React.FC<MySongsProps> = ({ user }) => {
     }
     try {
         db.addSong(user.id, title, artist, url, genre, capcutUrl || undefined);
-        setSongs(db.getSongsByUser(user.id));
         setIsModalOpen(false);
         // Reset Form
         setTitle('');

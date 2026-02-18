@@ -20,6 +20,7 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
 
   useEffect(() => {
     refreshTasks();
+    return db.subscribe(refreshTasks);
   }, [user]);
 
   const handleGetTask = () => {
@@ -29,7 +30,8 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
         try {
             const newTask = db.assignRandomTask(user.id);
             if (newTask) {
-                refreshTasks();
+                // Subscription will handle update, but since assignRandomTask notifies, 
+                // and the subscription calls refreshTasks, it will update.
             } else {
                 alert("Tidak ada sound tersedia saat ini. Coba lagi nanti!");
             }
@@ -64,7 +66,6 @@ export const Tasks: React.FC<TasksProps> = ({ user }) => {
         setSubmitTaskId(null);
         setSubmitLink('');
         setSubmitDate('');
-        refreshTasks();
     }
   };
 

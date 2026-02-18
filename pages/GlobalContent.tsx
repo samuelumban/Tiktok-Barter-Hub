@@ -8,10 +8,15 @@ export const GlobalContent: React.FC = () => {
     const [songs, setSongs] = useState<Song[]>([]);
     const [users, setUsers] = useState<User[]>([]);
 
-    useEffect(() => {
+    const refreshData = () => {
         setTasks(db.getApprovedTasks());
         setSongs(db.getAllSongs());
         setUsers(db.getAllUsers());
+    };
+
+    useEffect(() => {
+        refreshData();
+        return db.subscribe(refreshData);
     }, []);
 
     const getSong = (id: string) => songs.find(s => s.id === id);

@@ -19,13 +19,14 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
 
   useEffect(() => {
     refresh();
+    return db.subscribe(refresh);
   }, [user]);
 
   const handleRateAndApprove = (taskId: string, rating: number) => {
       // Direct approval on rating click
       if (window.confirm(`Berikan rating bintang ${rating} dan setujui konten ini?`)) {
           db.reviewTask(taskId, true, undefined, rating);
-          refresh();
+          // refresh() is handled by subscription
       }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../services/mockDb';
 import { User, UserRole, Song, CapcutStatus } from '../types';
 import { UserPlus, Trash2, Music, ExternalLink, Mail, Phone, MessageCircle, AlertCircle, Pencil, X, Save, FileVideo, Sparkles, Download } from 'lucide-react';
@@ -20,6 +20,16 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
     // CapCut Fulfillment
     const [templateLinks, setTemplateLinks] = useState<{[key: string]: string}>({});
 
+    const refreshData = () => {
+        setAllUsers([...db.getAllUsers()]);
+        setAllSongs([...db.getAllSongs()]);
+    };
+
+    useEffect(() => {
+        refreshData();
+        return db.subscribe(refreshData);
+    }, []);
+
     if (user.role !== UserRole.ADMIN) return <div>Akses Ditolak</div>;
 
     const allTasks = db.getAllTasks();
@@ -34,8 +44,6 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
 
         try {
             db.addUser(newUsername.trim());
-            // Update the local state with the fresh list from DB
-            setAllUsers([...db.getAllUsers()]);
             setNewUsername('');
         } catch (err: any) {
             alert(err.message || "Gagal menambah user");
@@ -45,7 +53,6 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
     const handleDeleteSong = (songId: string) => {
         if (window.confirm("Yakin ingin menghapus sound ini?")) {
             db.deleteSong(songId);
-            setAllSongs([...db.getAllSongs()]);
         }
     };
 
@@ -54,7 +61,6 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         if (!link) return;
         try {
             db.fulfillCapcutRequest(songId, link);
-            setAllSongs([...db.getAllSongs()]);
             // clear input
             const newLinks = {...templateLinks};
             delete newLinks[songId];
@@ -111,7 +117,6 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         try {
             db.updateUser(editingUser.id, editForm);
             setEditingUser(null);
-            setAllUsers([...db.getAllUsers()]);
         } catch (err: any) {
             alert(err.message);
         }

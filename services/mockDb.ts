@@ -37,11 +37,21 @@ class MockDB {
   private users: User[];
   private songs: Song[];
   private tasks: Task[];
+  private listeners: (() => void)[] = [];
 
   constructor() {
     this.users = this.load(KEYS.USERS, MOCK_USERS);
     this.songs = this.load(KEYS.SONGS, MOCK_SONGS);
     this.tasks = this.load(KEYS.TASKS, MOCK_TASKS);
+
+    // Listen for changes from other tabs/windows
+    if (typeof window !== 'undefined') {
+        window.addEventListener('storage', (e) => {
+            if (e.key && Object.values(KEYS).includes(e.key)) {
+                this.reload();
+            }
+        });
+    }
   }
 
   private load<T>(key: string, defaultData: T): T {
@@ -53,14 +63,38 @@ class MockDB {
     localStorage.setItem(key, JSON.stringify(data));
   }
 
+  // Reload internal state from localStorage and notify listeners
+  private reload() {
+      this.users = this.load(KEYS.USERS, MOCK_USERS);
+      this.songs = this.load(KEYS.SONGS, MOCK_SONGS);
+      this.tasks = this.load(KEYS.TASKS, MOCK_TASKS);
+      this.notify();
+  }
+
+  // Subscribe to DB changes
+  subscribe(listener: () => void): () => void {
+      this.listeners.push(listener);
+      return () => {
+          this.listeners = this.listeners.filter(l => l !== listener);
+      };
+  }
+
+  private notify() {
+      this.listeners.forEach(l => l());
+  }
+
   private persist() {
     this.save(KEYS.USERS, this.users);
     this.save(KEYS.SONGS, this.songs);
     this.save(KEYS.TASKS, this.tasks);
+    this.notify();
   }
 
   // --- Auth ---
   login(username: string, password?: string): User | null {
+    // Ensure data is fresh before login attempt
+    this.reload();
+    
     const user = this.users.find(u => u.username === username);
     if (!user) return null;
 
@@ -126,6 +160,9 @@ class MockDB {
   }
 
   registerUser(data: { name: string; username: string; password: string; phoneNumber: string; email: string }): User {
+    // Reload to check for duplicates correctly
+    this.reload();
+
     if (this.users.some(u => u.username === data.username)) {
         throw new Error("Username sudah digunakan");
     }
@@ -178,6 +215,9 @@ class MockDB {
   }
 
   resetPassword(username: string, phoneNumber: string, newPassword: string): boolean {
+    // Reload to ensure we find the user
+    this.reload();
+    
     const user = this.users.find(u => u.username === username);
     if (!user) {
         throw new Error("Username tidak ditemukan.");
