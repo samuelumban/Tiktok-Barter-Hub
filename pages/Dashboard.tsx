@@ -149,64 +149,64 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* Stats Grid - Modified for 2 columns on mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Poin Kredit</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.credits}</p>
+              <p className="text-xs md:text-sm font-medium text-gray-500">Poin Kredit</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.credits}</p>
             </div>
-            <div className="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
-              <Award className="h-6 w-6" />
+            <div className="h-8 w-8 md:h-10 md:w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+              <Award className="h-5 w-5 md:h-6 md:w-6" />
             </div>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="mt-2 md:mt-4 text-[10px] md:text-xs text-gray-500 truncate">
              Level: <span className="font-bold text-indigo-600">{user.tier}</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Sound Anda</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeSongs}</p>
+              <p className="text-xs md:text-sm font-medium text-gray-500">Sound Anda</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.activeSongs}</p>
             </div>
-            <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-              <Music2 className="h-6 w-6" />
+            <div className="h-8 w-8 md:h-10 md:w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+              <Music2 className="h-5 w-5 md:h-6 md:w-6" />
             </div>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="mt-2 md:mt-4 text-[10px] md:text-xs text-gray-500 truncate">
              Di Sistem Barter
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Menunggu Review</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.pendingReviews}</p>
+              <p className="text-xs md:text-sm font-medium text-gray-500">Menunggu Review</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.pendingReviews}</p>
             </div>
-            <div className="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-              <CheckCircle className="h-6 w-6" />
+            <div className="h-8 w-8 md:h-10 md:w-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
+              <CheckCircle className="h-5 w-5 md:h-6 md:w-6" />
             </div>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="mt-2 md:mt-4 text-[10px] md:text-xs text-gray-500 truncate">
              Butuh persetujuan Anda
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Tugas Diperlukan</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeSongs + 1}</p>
+              <p className="text-xs md:text-sm font-medium text-gray-500">Tugas Diperlukan</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.activeSongs + 1}</p>
             </div>
-             <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-              <TrendingUp className="h-6 w-6" />
+             <div className="h-8 w-8 md:h-10 md:w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+              <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
             </div>
           </div>
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="mt-2 md:mt-4 text-[10px] md:text-xs text-gray-500 truncate">
              Sound Random dari user
           </div>
         </div>

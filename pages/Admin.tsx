@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { db } from '../services/mockDb';
 import { User, UserRole, Song, CapcutStatus } from '../types';
-import { UserPlus, Trash2, Music, ExternalLink, Mail, Phone, MessageCircle, AlertCircle, Pencil, X, Save, FileVideo, Sparkles } from 'lucide-react';
+import { UserPlus, Trash2, Music, ExternalLink, Mail, Phone, MessageCircle, AlertCircle, Pencil, X, Save, FileVideo, Sparkles, Download } from 'lucide-react';
 
 interface AdminProps {
     user: User;
@@ -117,6 +117,68 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
         }
     };
 
+    // --- Export Functions ---
+    const escapeCsv = (str: any) => {
+        if (str === null || str === undefined) return '';
+        return '"' + String(str).replace(/"/g, '""') + '"';
+    };
+
+    const downloadCSV = (content: string, fileName: string) => {
+        const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleExportUsers = () => {
+        const headers = ['User Code', 'Username', 'Name', 'Phone', 'Email', 'Role', 'Credits', 'Tier', 'TikTok Username', 'Content Category', 'Last Activity', 'Last Submission'];
+        const rows = allUsers.map(u => [
+            escapeCsv(u.userCode),
+            escapeCsv(u.username),
+            escapeCsv(u.name),
+            escapeCsv(u.phoneNumber),
+            escapeCsv(u.email),
+            escapeCsv(u.role),
+            u.credits,
+            escapeCsv(u.tier),
+            escapeCsv(u.tiktokUsername),
+            escapeCsv(u.contentCategory),
+            escapeCsv(u.lastActivity),
+            escapeCsv(u.lastTaskSubmission)
+        ]);
+
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        downloadCSV(csvContent, `Users_BarterHub_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
+    const handleExportSongs = () => {
+        const headers = ['Song Code', 'Title', 'Artist', 'Genre', 'Owner Username', 'Owner Name', 'Audio URL', 'CapCut URL', 'Status', 'Usage Count', 'Submitted At'];
+        const rows = allSongs.map(s => {
+            const owner = allUsers.find(u => u.id === s.ownerId);
+            return [
+                escapeCsv(s.rowCode),
+                escapeCsv(s.title),
+                escapeCsv(s.artist),
+                escapeCsv(s.genre),
+                escapeCsv(owner?.username || 'Unknown'),
+                escapeCsv(owner?.name || 'Unknown'),
+                escapeCsv(s.tiktokAudioUrl),
+                escapeCsv(s.capcutTemplateUrl),
+                escapeCsv(s.status),
+                s.usageCount,
+                escapeCsv(s.submittedAt)
+            ];
+        });
+
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        downloadCSV(csvContent, `Songs_BarterHub_${new Date().toISOString().split('T')[0]}.csv`);
+    };
+
     // Group Songs By User
     const songsByUser: { [key: string]: Song[] } = {};
     allSongs.forEach(s => {
@@ -213,8 +275,14 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
 
             {/* User List */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="font-bold text-black">Data User Terdaftar</h3>
+                    <button 
+                        onClick={handleExportUsers}
+                        className="flex items-center text-sm bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors"
+                    >
+                        <Download className="h-4 w-4 mr-2" /> Export Excel
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
@@ -300,11 +368,17 @@ export const Admin: React.FC<AdminProps> = ({ user }) => {
 
             {/* Song Management */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="font-bold text-black flex items-center">
                         <Music className="h-5 w-5 mr-2 text-indigo-600" />
                         Manajemen & Link Sound (Dikelompokkan per User)
                     </h3>
+                    <button 
+                        onClick={handleExportSongs}
+                        className="flex items-center text-sm bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors"
+                    >
+                        <Download className="h-4 w-4 mr-2" /> Export Excel
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">

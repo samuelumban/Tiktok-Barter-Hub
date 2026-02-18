@@ -16,56 +16,50 @@ export const GlobalContent: React.FC = () => {
 
     const getSong = (id: string) => songs.find(s => s.id === id);
     const getUser = (id: string) => users.find(u => u.id === id);
+    const getOwner = (ownerId: string) => users.find(u => u.id === ownerId);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Galeri Konten</h1>
-                <p className="text-gray-500">Kumpulan konten yang berhasil dibuat oleh komunitas.</p>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Galeri Konten</h1>
+                <p className="text-sm text-gray-500">Kumpulan konten komunitas.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {tasks.map(task => {
                     const song = getSong(task.songId);
                     const creator = getUser(task.assigneeId);
                     if (!song || !creator) return null;
+                    const owner = getOwner(song.ownerId);
 
                     return (
-                        <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-lg text-gray-900 truncate flex-1">{song.title}</h3>
-                                    <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-yellow-600">
-                                        <Star className="w-3 h-3 fill-current mr-1" />
-                                        <span className="text-xs font-bold">{task.rating || '-'}</span>
-                                    </div>
-                                </div>
-                                <p className="text-xs text-gray-500 mb-4">By {song.artist}</p>
+                        <div key={task.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col justify-between">
+                            <div className="p-3">
+                                <h3 className="font-bold text-sm text-gray-900 truncate mb-1">{song.title}</h3>
+                                <p className="text-[10px] text-gray-500 truncate mb-3">
+                                    {owner?.username || 'Owner'} • <span className="text-indigo-600 font-medium">{creator.username}</span>
+                                </p>
                                 
-                                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                                    <span>Kreator: <span className="font-semibold text-indigo-600">{creator.username}</span></span>
-                                </div>
-
                                 <a 
                                     href={task.contentLink} 
                                     target="_blank" 
                                     rel="noreferrer"
-                                    className="block w-full text-center py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center"
+                                    className="block w-full text-center py-1.5 bg-black text-white rounded text-xs font-medium hover:bg-gray-800 transition-colors flex items-center justify-center mb-2"
                                 >
-                                    Tonton di TikTok <ExternalLink className="h-4 w-4 ml-2" />
+                                     Tonton <ExternalLink className="h-3 w-3 ml-1" />
                                 </a>
                             </div>
-                            <div className="bg-gray-50 px-5 py-3 text-xs text-gray-400 border-t border-gray-100 flex justify-between">
-                                <span>{new Date(task.completedAt || '').toLocaleDateString()}</span>
-                                <span>{song.genre}</span>
+                            <div className="bg-gray-50 px-3 py-2 text-[10px] text-gray-400 border-t border-gray-100 flex justify-between items-center">
+                                <span>{new Date(task.completedAt || task.submittedAt || '').toLocaleDateString()}</span>
+                                <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">{song.genre}</span>
                             </div>
                         </div>
                     );
                 })}
 
                 {tasks.length === 0 && (
-                    <div className="col-span-full py-20 text-center">
-                        <p className="text-gray-500 text-lg">Belum ada konten yang disetujui di galeri.</p>
+                    <div className="col-span-full py-12 text-center">
+                        <p className="text-gray-400 text-sm">Belum ada konten di galeri.</p>
                     </div>
                 )}
             </div>

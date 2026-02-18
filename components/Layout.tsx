@@ -14,39 +14,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(0);
-  
-  // Onboarding State
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(0);
 
   useEffect(() => {
     if (user) {
         // Calculate pending approvals for badge
         const count = db.getPendingApprovals(user.id).length;
         setPendingCount(count);
-
-        // Check onboarding status
-        const freshUser = db.getUser(user.id);
-        if (freshUser && freshUser.hasSeenOnboarding === false) {
-            setShowOnboarding(true);
-        }
     }
   }, [user, location.pathname]); // Update badge when location changes (user might have approved stuff)
-
-  const handleSkipOnboarding = () => {
-      if (user) {
-          db.completeOnboarding(user.id);
-          setShowOnboarding(false);
-      }
-  };
-
-  const handleNextOnboarding = () => {
-      if (onboardingStep < 4) {
-          setOnboardingStep(onboardingStep + 1);
-      } else {
-          handleSkipOnboarding();
-      }
-  };
 
   if (!user) {
     return <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">{children}</div>;
@@ -60,17 +35,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
   const isMobileActive = (path: string) => location.pathname === path 
     ? "text-indigo-600" 
     : "text-gray-400";
-
-  // Onboarding Data
-  const steps = [
-      { target: 'dashboard', title: 'Dasbor Utama', text: 'Lihat statistik, aset sound, dan riwayat konten Anda di sini.' },
-      { target: 'songs', title: 'Sound Saya', text: 'Upload sound Anda agar bisa digunakan oleh kreator lain.' },
-      { target: 'tasks', title: 'Tugas Saya', text: 'Ambil tugas membuat konten untuk mendapatkan poin kredit.' },
-      { target: 'approvals', title: 'Persetujuan', text: 'Review konten yang dibuat orang lain untuk sound Anda.' },
-      { target: 'gallery', title: 'Galeri', text: 'Lihat semua karya komunitas di sini.' }
-  ];
-
-  const currentStepData = steps[onboardingStep];
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden relative">
@@ -92,7 +56,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 <LayoutDashboard className="mr-3 h-5 w-5" />
                 Dasbor
                 </Link>
-                {showOnboarding && onboardingStep === 0 && <OnboardingPulse />}
             </div>
 
             <div className="relative">
@@ -100,7 +63,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 <Music className="mr-3 h-5 w-5" />
                 Sound Saya
                 </Link>
-                {showOnboarding && onboardingStep === 1 && <OnboardingPulse />}
             </div>
 
             <div className="relative">
@@ -108,7 +70,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 <ListTodo className="mr-3 h-5 w-5" />
                 Tugas Saya
                 </Link>
-                {showOnboarding && onboardingStep === 2 && <OnboardingPulse />}
             </div>
 
             <div className="relative">
@@ -123,7 +84,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                         </span>
                     )}
                 </Link>
-                {showOnboarding && onboardingStep === 3 && <OnboardingPulse />}
             </div>
 
              <div className="relative">
@@ -131,7 +91,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
                 <Globe className="mr-3 h-5 w-5" />
                 Galeri Konten
                 </Link>
-                {showOnboarding && onboardingStep === 4 && <OnboardingPulse />}
              </div>
 
             {user.role === UserRole.ADMIN && (
@@ -174,27 +133,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6 pb-24 md:pb-6">
             {children}
         </main>
-
-        {/* Onboarding Overlay */}
-        {showOnboarding && (
-            <div className="fixed left-64 top-20 z-50 bg-white p-6 rounded-lg shadow-2xl border border-indigo-100 max-w-xs animate-fade-in-up">
-                <div className="absolute -left-2 top-6 w-4 h-4 bg-white transform rotate-45 border-l border-b border-indigo-100"></div>
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-indigo-700 text-lg">{currentStepData.title}</h3>
-                    <button onClick={handleSkipOnboarding} className="text-gray-400 hover:text-gray-600"><X className="h-4 w-4"/></button>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">{currentStepData.text}</p>
-                <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-400">{onboardingStep + 1} dari 5</span>
-                    <button 
-                        onClick={handleNextOnboarding}
-                        className="px-4 py-1.5 bg-indigo-600 text-white text-sm rounded-full font-medium hover:bg-indigo-700"
-                    >
-                        {onboardingStep === 4 ? 'Selesai' : 'Lanjut'}
-                    </button>
-                </div>
-            </div>
-        )}
       </div>
       
       {/* Mobile Nav Bottom */}
@@ -230,7 +168,3 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
     </div>
   );
 };
-
-const OnboardingPulse = () => (
-    <span className="absolute left-0 top-0 h-full w-full border-2 border-yellow-400 rounded-md animate-pulse pointer-events-none"></span>
-);

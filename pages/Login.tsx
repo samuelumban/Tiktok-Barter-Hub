@@ -32,7 +32,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const user = db.login(loginUsername, loginPassword);
+    // Trim username to allow login if user accidentally added a space
+    const user = db.login(loginUsername.trim(), loginPassword);
     if (user) {
         onLogin(user);
         navigate('/');
@@ -50,7 +51,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     try {
         const user = db.registerUser({
             name: regName,
-            username: regUsername,
+            username: regUsername.trim(),
             password: regPassword,
             phoneNumber: regPhone,
             email: regEmail
@@ -65,7 +66,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault();
     try {
-        db.resetPassword(forgotUsername, forgotPhone, newPassword);
+        db.resetPassword(forgotUsername.trim(), forgotPhone, newPassword);
         setSuccessMsg('Password berhasil diubah. Silakan login.');
         setTimeout(() => {
             setViewState('LOGIN');
