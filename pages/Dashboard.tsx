@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { User, DashboardStats, ContentCategory, Song, CapcutStatus } from '../types';
+import { User, DashboardStats, ContentCategory, Song, CapcutStatus, Task, TaskStatus } from '../types';
 import { db } from '../services/mockDb';
-import { AlertTriangle, Award, CheckCircle, Music2, TrendingUp, Sparkles, UserCircle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { AlertTriangle, Award, CheckCircle, Music2, TrendingUp, Sparkles, UserCircle, Star, ExternalLink } from 'lucide-react';
 
 interface DashboardProps {
   user: User;
@@ -17,6 +16,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userSongs, setUserSongs] = useState<Song[]>([]);
+  const [userTasks, setUserTasks] = useState<Task[]>([]);
   
   // Profile Form
   const [tiktokUsername, setTiktokUsername] = useState('');
@@ -33,6 +33,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         setStats(db.getStats(freshUser.id));
         setUserSongs(db.getSongsByUser(freshUser.id));
         
+        // Fetch tasks done by user (Completed/Submitted)
+        const allTasks = db.getAllTasks();
+        const myWork = allTasks.filter(t => t.assigneeId === user.id && (t.status === TaskStatus.SUBMITTED || t.status === TaskStatus.APPROVED));
+        setUserTasks(myWork);
+
         // Check if profile incomplete
         if (!freshUser.tiktokUsername || !freshUser.tiktokLink || !freshUser.contentCategory) {
             setShowProfileModal(true);
@@ -63,13 +68,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       }
   };
 
-  if (!stats) return <div>Memuat...</div>;
+  const getSongTitle = (songId: string) => {
+      const s = db.getAllSongs().find(s => s.id === songId);
+      return s ? s.title : 'Unknown';
+  };
 
-  const data = [
-    { name: 'Kredit', value: stats.credits, color: '#8884d8' },
-    { name: 'Sound Anda', value: stats.activeSongs, color: '#82ca9d' },
-    { name: 'Hutang', value: stats.debt, color: '#ff8042' },
-  ];
+  const getSongOwnerName = (songId: string) => {
+      const s = db.getAllSongs().find(s => s.id === songId);
+      if(!s) return 'Unknown';
+      const u = db.getUser(s.ownerId);
+      return u ? u.username : 'Unknown';
+  };
+
+  const getReviewedCountForSong = (songId: string) => {
+      const tasks = db.getAllTasks();
+      return tasks.filter(t => t.songId === songId && t.status === TaskStatus.APPROVED).length;
+  };
+
+  if (!stats) return <div>Memuat...</div>;
 
   return (
     <div className="space-y-6 relative">
@@ -196,22 +212,100 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Ringkasan Performa</h3>
-        <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                </Bar>
-            </BarChart>
-            </ResponsiveContainer>
+      {/* TABLE 1: User Assets */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="font-bold text-gray-800 flex items-center">
+                <Music2 className="h-5 w-5 mr-2 text-indigo-600" />
+                Aset Sound Anda & Statistik
+            </h3>
+        </div>
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 text-gray-600 uppercase">
+                    <tr>
+                        <th className="px-6 py-3">ID Sound</th>
+                        <th className="px-6 py-3">Judul Sound</th>
+                        <th className="px-6 py-3 text-center">Konten Dibuat (Usage)</th>
+                        <th className="px-6 py-3 text-center">Sudah Direview (Approved)</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {userSongs.length === 0 ? (
+                        <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-500">Belum ada sound.</td></tr>
+                    ) : (
+                        userSongs.map(s => (
+                            <tr key={s.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-mono text-gray-500">{s.rowCode}</td>
+                                <td className="px-6 py-4 font-medium">{s.title}</td>
+                                <td className="px-6 py-4 text-center">
+                                    <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full font-bold">{s.usageCount}</span>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <span className="bg-green-100 text-green-800 py-1 px-3 rounded-full font-bold">{getReviewedCountForSong(s.id)}</span>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+      </div>
+
+      {/* TABLE 2: Content Created History */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="font-bold text-gray-800 flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+                Riwayat Konten Yang Anda Buat
+            </h3>
+        </div>
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50 text-gray-600 uppercase">
+                    <tr>
+                        <th className="px-6 py-3">Judul Sound</th>
+                        <th className="px-6 py-3">Pemilik Sound</th>
+                        <th className="px-6 py-3">Link Konten</th>
+                        <th className="px-6 py-3 text-center">Rating</th>
+                        <th className="px-6 py-3 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {userTasks.length === 0 ? (
+                        <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-500">Belum ada konten yang dibuat.</td></tr>
+                    ) : (
+                        userTasks.map(t => (
+                            <tr key={t.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium">{getSongTitle(t.songId)}</td>
+                                <td className="px-6 py-4 text-gray-600">{getSongOwnerName(t.songId)}</td>
+                                <td className="px-6 py-4">
+                                    <a href={t.contentLink} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center">
+                                        Link TikTok <ExternalLink className="h-3 w-3 ml-1" />
+                                    </a>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    {t.rating ? (
+                                        <div className="flex items-center justify-center text-yellow-500">
+                                            <Star className="h-4 w-4 fill-current mr-1" />
+                                            <span className="font-bold">{t.rating}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-400">-</span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <span className={`px-2 py-1 rounded text-xs uppercase font-bold ${
+                                        t.status === TaskStatus.APPROVED ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                    }`}>
+                                        {t.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
         </div>
       </div>
 

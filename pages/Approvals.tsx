@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Task, Song } from '../types';
 import { db } from '../services/mockDb';
-import { Check, X, ExternalLink, Star } from 'lucide-react';
+import { Check, ExternalLink, Star } from 'lucide-react';
 
 interface ApprovalsProps {
   user: User;
@@ -9,10 +9,9 @@ interface ApprovalsProps {
 
 export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
-  const [rejectId, setRejectId] = useState<string | null>(null);
-  const [approveId, setApproveId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState('');
-  const [rating, setRating] = useState(5);
+  
+  // Track opened links to visually indicate user has (presumably) watched the content
+  const [openedLinks, setOpenedLinks] = useState<string[]>([]);
 
   const refresh = () => {
     setPendingTasks(db.getPendingApprovals(user.id));
@@ -22,23 +21,18 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
     refresh();
   }, [user]);
 
-  const handleApprove = () => {
-    if (approveId) {
-        db.reviewTask(approveId, true, undefined, rating);
-        setApproveId(null);
-        setRating(5);
-        refresh();
-    }
+  const handleRateAndApprove = (taskId: string, rating: number) => {
+      // Direct approval on rating click
+      if (window.confirm(`Berikan rating bintang ${rating} dan setujui konten ini?`)) {
+          db.reviewTask(taskId, true, undefined, rating);
+          refresh();
+      }
   };
 
-  const handleReject = (e: React.FormEvent) => {
-    e.preventDefault();
-    if(rejectId) {
-        db.reviewTask(rejectId, false, feedback);
-        setRejectId(null);
-        setFeedback('');
-        refresh();
-    }
+  const handleLinkClick = (taskId: string) => {
+      if (!openedLinks.includes(taskId)) {
+          setOpenedLinks([...openedLinks, taskId]);
+      }
   };
 
   const getSongDetails = (songId: string): Song | undefined => {
@@ -53,7 +47,7 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
     <div className="space-y-6">
         <div>
             <h1 className="text-2xl font-bold text-gray-900">Persetujuan</h1>
-            <p className="text-gray-500">Validasi konten yang dibuat untuk sound Anda. Berikan rating untuk konten yang bagus.</p>
+            <p className="text-gray-500">Tonton konten yang dibuat, lalu berikan rating untuk menyetujui.</p>
         </div>
 
         <div className="space-y-4">
@@ -68,80 +62,52 @@ export const Approvals: React.FC<ApprovalsProps> = ({ user }) => {
                 const song = getSongDetails(task.songId);
                 const creator = getAssignee(task.assigneeId);
                 if (!song) return null;
-
-                const isApproving = approveId === task.id;
-                const isRejecting = rejectId === task.id;
+                
+                const hasOpened = openedLinks.includes(task.id);
 
                 return (
-                    <div key={task.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                        <div className="flex flex-col md:flex-row gap-6">
+                    <div key={task.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div className="flex flex-col md:flex-row gap-6 items-center">
                             {/* Left: Info */}
-                            <div className="flex-1">
+                            <div className="flex-1 w-full">
                                 <h3 className="font-bold text-lg text-gray-900">{song.title}</h3>
-                                <p className="text-sm text-gray-500 mb-4">Dibuat oleh: <span className="font-semibold text-gray-700">{creator?.username}</span></p>
+                                <p className="text-sm text-gray-500 mb-2">Kreator: <span className="font-semibold text-gray-700">{creator?.username}</span></p>
                                 
-                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Kiriman Konten</p>
-                                    <a href={task.contentLink} target="_blank" rel="noreferrer" className="flex items-center text-indigo-600 hover:underline font-medium">
-                                        <ExternalLink className="h-4 w-4 mr-2" /> Buka Link TikTok
+                                <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 flex items-center justify-between">
+                                    <span className="text-sm font-medium text-indigo-900">Link Konten:</span>
+                                    <a 
+                                        href={task.contentLink} 
+                                        target="_blank" 
+                                        rel="noreferrer" 
+                                        onClick={() => handleLinkClick(task.id)}
+                                        className="flex items-center text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors"
+                                    >
+                                        Buka TikTok <ExternalLink className="h-4 w-4 ml-2" />
                                     </a>
                                 </div>
+                                <p className="text-xs text-gray-400 mt-2 italic">
+                                    *Klik link di atas untuk membuka konten, lalu berikan rating di sebelah kanan.
+                                </p>
                             </div>
 
                             {/* Right: Actions */}
-                            <div className="flex flex-col justify-center min-w-[280px] border-l border-gray-100 pl-0 md:pl-6">
-                                {isRejecting ? (
-                                    <form onSubmit={handleReject} className="space-y-3">
-                                        <p className="text-sm font-bold text-red-600">Penolakan Konten</p>
-                                        <textarea 
-                                            placeholder="Alasan penolakan..."
-                                            className="w-full text-sm p-2 border rounded"
-                                            value={feedback}
-                                            onChange={e => setFeedback(e.target.value)}
-                                            required
-                                        />
-                                        <div className="flex gap-2">
-                                            <button type="button" onClick={() => setRejectId(null)} className="flex-1 px-3 py-1.5 text-xs bg-gray-200 rounded">Batal</button>
-                                            <button type="submit" className="flex-1 px-3 py-1.5 text-xs bg-red-600 text-white rounded">Konfirmasi Tolak</button>
-                                        </div>
-                                    </form>
-                                ) : isApproving ? (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-sm font-bold text-green-700 mb-2">Berikan Rating:</p>
-                                            <div className="flex space-x-2">
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <button 
-                                                        key={star} 
-                                                        onClick={() => setRating(star)}
-                                                        className={`focus:outline-none transition-transform hover:scale-110 ${rating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                                                    >
-                                                        <Star className="h-6 w-6 fill-current" />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button type="button" onClick={() => setApproveId(null)} className="flex-1 px-3 py-2 text-sm bg-gray-200 rounded">Batal</button>
-                                            <button type="button" onClick={handleApprove} className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded font-bold hover:bg-green-700">Kirim Review</button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
+                            <div className="flex flex-col justify-center items-center md:items-end min-w-[200px] border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
+                                <p className="text-sm font-bold text-gray-700 mb-3">Berikan Rating:</p>
+                                <div className="flex space-x-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
                                         <button 
-                                            onClick={() => setApproveId(task.id)}
-                                            className="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors font-semibold"
+                                            key={star} 
+                                            onClick={() => handleRateAndApprove(task.id, star)}
+                                            className="focus:outline-none group"
+                                            title={`Beri Bintang ${star}`}
                                         >
-                                            <Check className="h-5 w-5 mr-2" /> Terima & Nilai
+                                            <Star className="h-8 w-8 text-gray-300 hover:text-yellow-400 fill-current group-hover:text-yellow-400 transition-colors" />
                                         </button>
-                                        <button 
-                                            onClick={() => setRejectId(task.id)}
-                                            className="w-full flex items-center justify-center px-4 py-3 bg-white border border-gray-300 hover:bg-red-50 hover:border-red-200 hover:text-red-700 text-gray-700 rounded-md transition-colors"
-                                        >
-                                            <X className="h-5 w-5 mr-2" /> Tolak
-                                        </button>
-                                    </div>
-                                )}
+                                    ))}
+                                </div>
+                                <p className="text-xs text-center text-gray-400 mt-2">
+                                    Pilih bintang untuk menyetujui.
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -16,7 +16,8 @@ const MOCK_USERS: User[] = [
     lastTaskSubmission: new Date().toISOString(),
     isActive: true,
     tier: UserTier.TOP_TIER,
-    penaltyPointsWeek: 0
+    penaltyPointsWeek: 0,
+    hasSeenOnboarding: true
   }
 ];
 
@@ -94,10 +95,6 @@ class MockDB {
                 user.credits = Math.max(0, user.credits - allowedDeduction);
                 user.penaltyPointsWeek += allowedDeduction;
                 user.lastPenaltyDate = now.toISOString();
-                // We update lastTaskSubmission to NOW to prevent immediate double penalty, 
-                // treating the penalty as a "checkpoint"
-                // user.lastTaskSubmission = now.toISOString(); 
-                // Alternatively, we just rely on penaltyPointsWeek check to stop further deductions
             }
         }
     }
@@ -151,7 +148,8 @@ class MockDB {
         lastTaskSubmission: new Date().toISOString(), 
         isActive: true,
         tier: UserTier.BRONZE,
-        penaltyPointsWeek: 0
+        penaltyPointsWeek: 0,
+        hasSeenOnboarding: false // New users need onboarding
     };
 
     this.users.push(newUser);
@@ -169,6 +167,14 @@ class MockDB {
       
       this.persist();
       return user;
+  }
+  
+  completeOnboarding(userId: string) {
+      const user = this.getUser(userId);
+      if (user) {
+          user.hasSeenOnboarding = true;
+          this.persist();
+      }
   }
 
   resetPassword(username: string, phoneNumber: string, newPassword: string): boolean {
@@ -411,7 +417,8 @@ class MockDB {
           lastTaskSubmission: new Date().toISOString(),
           isActive: true,
           tier: UserTier.BRONZE,
-          penaltyPointsWeek: 0
+          penaltyPointsWeek: 0,
+          hasSeenOnboarding: true // Admin created, assume active/trained
       };
       
       this.users.push(newUser);

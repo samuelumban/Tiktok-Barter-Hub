@@ -37,6 +37,9 @@ export interface User {
   // Penalty Tracking
   penaltyPointsWeek: number; // Max 10 per week
   lastPenaltyDate?: string;
+  
+  // Onboarding
+  hasSeenOnboarding?: boolean;
 }
 
 export enum SongStatus {
@@ -45,7 +48,7 @@ export enum SongStatus {
   INACTIVE = 'inactive' // due to user inactivity
 }
 
-export type SongGenre = 'Pop' | 'Religi' | 'Dangdut' | 'Remix' | 'Rohani' | 'Jazz' | 'Etnik' | 'Humor' | 'Kids';
+export type SongGenre = 'Pop' | 'Religi' | 'Dangdut' | 'Remix' | 'Rohani' | 'Jazz' | 'Etnik' | 'Humor' | 'Kids' | 'Rock' | 'Indie';
 
 export enum CapcutStatus {
   NONE = 'none',

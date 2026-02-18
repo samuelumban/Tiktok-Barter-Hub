@@ -7,7 +7,7 @@ interface MySongsProps {
   user: User;
 }
 
-const GENRES: SongGenre[] = ['Pop', 'Religi', 'Dangdut', 'Remix', 'Rohani', 'Jazz', 'Etnik', 'Humor', 'Kids'];
+const GENRES: SongGenre[] = ['Pop', 'Religi', 'Dangdut', 'Remix', 'Rohani', 'Jazz', 'Etnik', 'Humor', 'Kids', 'Rock', 'Indie'];
 
 export const MySongs: React.FC<MySongsProps> = ({ user }) => {
   const [songs, setSongs] = useState<Song[]>([]);
